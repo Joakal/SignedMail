@@ -12,10 +12,10 @@
         />
 
         <q-toolbar-title>
-          Quasar App
+          <current-key-select />
         </q-toolbar-title>
 
-        <div>Quasar v{{ $q.version }}</div>
+        <q-btn color="secondary" label="Public Key" @click="showPublicKey" />
       </q-toolbar>
     </q-header>
 
@@ -48,71 +48,59 @@
 </template>
 
 <script lang="ts">
-import EssentialLink from 'components/EssentialLink.vue'
 
 const linksList = [
   {
-    title: 'Docs',
-    caption: 'quasar.dev',
-    icon: 'school',
-    link: 'https://quasar.dev'
+    title: 'Encrypt or Sign',
+    icon: 'lock',
+    link: '/'
   },
   {
-    title: 'Github',
-    caption: 'github.com/quasarframework',
-    icon: 'code',
-    link: 'https://github.com/quasarframework'
+    title: 'Decrypt',
+    icon: 'lock_open',
+    link: '/decrypt'
   },
   {
-    title: 'Discord Chat Channel',
-    caption: 'chat.quasar.dev',
-    icon: 'chat',
-    link: 'https://chat.quasar.dev'
+    title: 'Keys',
+    icon: 'vpn_key',
+    link: '/keys'
   },
   {
-    title: 'Forum',
-    caption: 'forum.quasar.dev',
-    icon: 'record_voice_over',
-    link: 'https://forum.quasar.dev'
-  },
-  {
-    title: 'Twitter',
-    caption: '@quasarframework',
+    title: 'Help',
     icon: 'rss_feed',
-    link: 'https://twitter.quasar.dev'
+    link: '/help'
   },
   {
-    title: 'Facebook',
-    caption: '@QuasarFramework',
-    icon: 'public',
-    link: 'https://facebook.quasar.dev'
+    title: 'About',
+    icon: 'record_voice_over',
+    link: '/about'
   },
-  {
-    title: 'Quasar Awesome',
-    caption: 'Community Quasar projects',
-    icon: 'favorite',
-    link: 'https://awesome.quasar.dev'
-  }
 ];
 
-import { defineComponent, ref } from 'vue'
+import { defineComponent, defineAsyncComponent, ref } from 'vue'
 
 export default defineComponent({
   name: 'MainLayout',
 
   components: {
-    EssentialLink
+    EssentialLink: defineAsyncComponent(() => import('components/EssentialLink.vue')),
+    CurrentKeySelect: defineAsyncComponent(() => import('components/CurrentKeySelect.vue'))
   },
 
   setup () {
     const leftDrawerOpen = ref(false)
+
+    const showPublicKey = () => {
+      console.log('YEAH');
+    }
 
     return {
       essentialLinks: linksList,
       leftDrawerOpen,
       toggleLeftDrawer () {
         leftDrawerOpen.value = !leftDrawerOpen.value
-      }
+      },
+      showPublicKey,
     }
   }
 })

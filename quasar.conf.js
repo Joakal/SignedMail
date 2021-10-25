@@ -53,7 +53,7 @@ module.exports = configure(function (ctx) {
 
     // Full list of options: https://v2.quasar.dev/quasar-cli/quasar-conf-js#Property%3A-build
     build: {
-      vueRouterMode: 'hash', // available values: 'hash', 'history'
+      vueRouterMode: 'history', // available values: 'hash', 'history'
 
       // transpile: false,
 
@@ -100,7 +100,9 @@ module.exports = configure(function (ctx) {
       // directives: [],
 
       // Quasar plugins
-      plugins: []
+      plugins: [
+        'Notify'
+      ],
     },
 
     // animations: 'all', // --- includes all animations
@@ -142,9 +144,9 @@ module.exports = configure(function (ctx) {
       },
 
       manifest: {
-        name: `SignedMail`,
-        short_name: `SignedMail`,
-        description: `Signed encrypted messages`,
+        name: 'SignedMail',
+        short_name: 'SignedMail',
+        description: 'Signed encrypted messages',
         display: 'standalone',
         orientation: 'portrait',
         background_color: '#ffffff',
