@@ -1,11 +1,12 @@
 <template>
   <q-page>
+    <current-key-select />
     <q-input v-model="input" filled :type="isPwd ? 'password' : 'textarea'" label="Input">
       <template v-slot:append>
         <q-icon
           name="content_copy"
           class="cursor-pointer"
-          @click="addToClipboard(input)"
+          @click="addToClipboard({label: 'Input', value: input})"
         />
         <q-icon
           :name="isPwd ? 'visibility_off' : 'visibility'"
@@ -24,7 +25,7 @@
         <q-icon
           name="content_copy"
           class="cursor-pointer"
-          @click="addToClipboard(output)"
+          @click="addToClipboard({label: 'Output', value: output})"
         />
       </template>
     </q-input>
@@ -32,13 +33,16 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from 'vue';
+import { defineComponent, defineAsyncComponent, ref } from 'vue';
 import {encryptMessage, signMessage, testEncrypt} from 'src/util/encryption';
 import { addToClipboard } from 'src/util/clipboard'
 
 
 export default defineComponent({
   name: 'PageIndex',
+  components: {
+    CurrentKeySelect: defineAsyncComponent(() => import('components/CurrentKeySelect.vue'))
+  },
   setup() {
     // TODO store password in settings
     // Other settings: popup of message (default)

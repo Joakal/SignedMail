@@ -7,7 +7,9 @@ import {
 } from 'vuex'
 
 import keys from './keys'
+import plugins from './plugins';
 import { KeysStateInterface } from './keys/state';
+import mutations from './mutations';
 
 /*
  * If not building with SSR mode, you can
@@ -40,6 +42,8 @@ export default store(function (/* { ssrContext } */) {
     modules: {
       keys
     },
+    plugins,
+    mutations,
 
     // enable strict mode (adds overhead!)
     // for dev mode and --debug builds only

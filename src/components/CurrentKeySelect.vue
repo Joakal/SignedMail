@@ -1,6 +1,24 @@
 <template>
-  <div>SignedMail - <q-select v-if="options().length" :options="options()" v-model="current" /><q-btn v-else :to="{name:'keys'}">Attach a key</q-btn>
-  </div>
+  <q-select v-if="options().length" :options="options()" v-model="current" /><div class="q-gutter-md row">
+  <q-select
+    filled
+    use-input
+    hide-selected
+    fill-input
+    input-debounce="0"
+    :options="options"
+    hint="Basic filtering"
+    style="width: 250px; padding-bottom: 32px"
+  >
+    <template v-slot:no-option>
+      <q-item>
+        <q-item-section class="text-grey">
+          No results
+        </q-item-section>
+      </q-item>
+    </template>
+  </q-select>
+</div>
 </template>
 
 <script lang="ts">
@@ -11,14 +29,14 @@ import { mapGetters, useStore } from 'vuex';
 import { storeKey } from 'src/store'
 
 export default defineComponent({
-  // name: 'ComponentName'
-  // SignedMail - <q-select v-model="keys" value=" {{email ? email : "No key attached"}}
-
+  props: {
+    
+  },
   setup () {
     const store = useStore(storeKey)
 
     const current = computed({
-      get: () => store.state.keys.current,
+      get: () => store.state.keys.currentKey,
       set: val => {
         store.commit('keys/updateCurrent', val)
       }

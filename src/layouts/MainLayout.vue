@@ -12,7 +12,7 @@
         />
 
         <q-toolbar-title>
-          <current-key-select />
+          SignedMail
         </q-toolbar-title>
 
         <q-btn color="secondary" label="Public Key" @click="showPublicKey" />
@@ -61,9 +61,19 @@ const linksList = [
     link: '/decrypt'
   },
   {
-    title: 'Keys',
+    title: 'Public Keys',
+    icon: 'public',
+    link: '/public'
+  },
+  {
+    title: 'Private Keys',
+    icon: 'security',
+    link: '/private'
+  },
+  {
+    title: 'Add',
     icon: 'vpn_key',
-    link: '/keys'
+    link: '/add'
   },
   {
     title: 'Help',
@@ -78,17 +88,26 @@ const linksList = [
 ];
 
 import { defineComponent, defineAsyncComponent, ref } from 'vue'
+import { useStore } from 'vuex';
+import { storeKey } from 'src/store';
+import { localStorageStore } from 'src/store/plugins';
 
 export default defineComponent({
   name: 'MainLayout',
 
   components: {
-    EssentialLink: defineAsyncComponent(() => import('components/EssentialLink.vue')),
-    CurrentKeySelect: defineAsyncComponent(() => import('components/CurrentKeySelect.vue'))
+    EssentialLink: defineAsyncComponent(() => import('components/EssentialLink.vue'))
   },
 
   setup () {
     const leftDrawerOpen = ref(false)
+
+    const store = useStore(storeKey)
+    const oldState = localStorageStore();
+
+    if (oldState) {
+      store.commit('initialiseStore', oldState);
+    }
 
     const showPublicKey = () => {
       console.log('YEAH');

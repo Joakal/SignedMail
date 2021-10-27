@@ -1,12 +1,59 @@
-import {readKey, decryptKey, readPrivateKey, encrypt, decrypt, createMessage, readMessage, generateKey, KeyPair} from 'openpgp';
+import {readKey, decryptKey, readPrivateKey, encrypt, decrypt, createMessage, readMessage, generateKey, KeyPair, EllipticCurveName, KeyOptions, UserID } from 'openpgp';
 
-export const variable = true;
-
-
-export function sayit (): string {
-  console.log("Say it isn't so")
-  return 'Greatness'
+export interface CombinedKeyPair extends KeyPair {
+  revocationCertificate: string
 }
+
+// Pulled from OpenPGP's own email regex
+export const emailRegex = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+([a-zA-Z]{2,}|xn--[a-zA-Z\-0-9]+)))$/;
+export const createTypeOptions = ['ecc', 'rsa']
+export const createCurveOptions = ['ed25519', 'curve25519', 'p256', 'p384', 'p521', 'secp256k1', 'brainpoolP256r1', 'brainpoolP384r1', 'brainpoolP512r1']
+
+export async function createKeys(name: string, email: string, passphrase: string, type: KeyOptions['type'] = 'ecc', curve: EllipticCurveName = 'curve25519', userIDs: UserID[] = []): Promise<CombinedKeyPair> {
+  console.log('name email, etc', name, email, passphrase)
+  // advanced types, curves, format 
+  return await generateKey({
+      type, // Type of the key, defaults to ECC
+      curve, // ECC curve name, defaults to curve25519
+      userIDs: [...userIDs, { name, email }], // you can pass multiple user IDs
+      passphrase, // protects the private key
+      format: 'object' // output key format, defaults to 'armored' (other options: 'binary' or 'object')
+  });
+}
+
+export function encryptMessage(body: string): string {
+
+  console.log('Signature is encryptMessage');
+  console.log('Signature is encryptMessage');
+  const encryptedBody = body;
+
+  return encryptedBody;
+}
+
+export function decryptMessage(encryptedBody: string): string {
+
+  console.log('Signature is decryptMessage');
+  const body = encryptedBody;
+
+  return body;
+}
+
+export function signMessage(body: string): string {
+
+  console.log('Signature is signMessage');
+  console.log('Signature is signMessage');
+  const encryptedBody = body;
+
+  return encryptedBody;
+}
+
+// export function storeSecret(key: string): string {
+  
+
+// }
+
+// export encryption;
+
 
 export async function testEncrypt(): Promise<string> {
   console.log('Starting TestEncrypt')
@@ -56,7 +103,7 @@ BxBqPN13SbRvf8SXgAfbB2/fMMd0wgA=
       const passphrase = 'test'; // what the private key is encrypted with
   
       console.log('TestEncrypt readKey')
-      const apublicKey = await readKey({ armoredKey: publicKey });
+      const apublicKey = await readKey({ armoredKey: privateKey });
       console.log('TestEncrypt readKey publicKey', publicKey)
       console.log('apublicKey', apublicKey)
   
@@ -93,48 +140,3 @@ BxBqPN13SbRvf8SXgAfbB2/fMMd0wgA=
       return new Promise(() => 'WEIRD');
       
 }
-
-export async function createKeys(name: string, email: string, passphrase: string): Promise<KeyPair & { revocationCertificate: string }> {
-  console.log('name email, etc', name, email, passphrase)
-  // advanced types, curves, format 
-  return await generateKey({
-      type: 'ecc', // Type of the key, defaults to ECC
-      curve: 'curve25519', // ECC curve name, defaults to curve25519
-      userIDs: [{ name, email }], // you can pass multiple user IDs
-      passphrase, // protects the private key
-      format: 'object' // output key format, defaults to 'armored' (other options: 'binary' or 'object')
-  });
-}
-
-export function encryptMessage(body: string): string {
-
-  console.log('Signature is encryptMessage');
-  console.log('Signature is encryptMessage');
-  const encryptedBody = body;
-
-  return encryptedBody;
-}
-
-export function decryptMessage(encryptedBody: string): string {
-
-  console.log('Signature is decryptMessage');
-  const body = encryptedBody;
-
-  return body;
-}
-
-export function signMessage(body: string): string {
-
-  console.log('Signature is signMessage');
-  console.log('Signature is signMessage');
-  const encryptedBody = body;
-
-  return encryptedBody;
-}
-
-// export function storeSecret(key: string): string {
-  
-
-// }
-
-// export encryption;

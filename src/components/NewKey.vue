@@ -17,7 +17,7 @@
       required
       :rules="[
         val => !!val || 'Field is required',
-        val => pgpEmailRegex.test(val) || 'Email is not valid'
+        val => emailRegex.test(val) || 'Email is not valid'
       ]"
     />
     <q-input
@@ -33,7 +33,14 @@
         @click="hidePassphrase = !hidePassphrase"
       />
     </q-input>
-    TODO: Advanced options
+    <q-expansion-item
+      v-model="expanded"
+      icon="perm_identity"
+      label="Advanced"
+    >
+      <q-select v-model="type" :options="createTypeOptions" label="Standard" />
+      <q-select v-model="curve" :options="createCurveOptions" label="Standard" />
+    </q-expansion-item>
     <div class="row justify-evenly q-pa-xs">
       <q-btn type="submit" color="primary" label="Create keys" />
     </div>
@@ -41,46 +48,34 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from 'vue'
-import { LocalStorage, SessionStorage, useQuasar } from 'quasar'
-import {createKeys} from 'src/util/encryption';
-import { KeyPair } from 'openpgp';
+import { defineComponent, ref, Ref } from 'vue'
+import { useQuasar } from 'quasar'
+import { useStore } from 'vuex';
+import { createKeys, CombinedKeyPair, emailRegex, createTypeOptions, createCurveOptions } from 'src/util/encryption';
+import { storeKey } from 'src/store'
+import { EllipticCurveName, KeyOptions } from 'openpgp';
 export default defineComponent({
   name: 'NewKey',
   emits: {
-    newKeys: (payload: KeyPair) => payload,
+    newKeys: (payload: CombinedKeyPair): boolean => !!payload,
   },
-  setup(props, { emit }) {
+  setup(_props, { emit }) {
+    const store = useStore(storeKey)
     const $q = useQuasar()
-    // Pulled from OpenPGP's own email regex
-    const pgpEmailRegex = ref(/^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+([a-zA-Z]{2,}|xn--[a-zA-Z\-0-9]+)))$/);
 
     const hidePassphrase = ref(true);
     const name = ref('test')
     const email = ref('test@test.com')
     const passphrase = ref('test')
+    const expanded = ref(false);
+    const type: Ref<KeyOptions['type']> = ref('ecc');
+    const curve: Ref<EllipticCurveName> = ref('curve25519');
 
     const handleCreateKeys = async () => {
       try {
-        const keys = await createKeys(name.value, email.value, passphrase.value)
-          console.log('Grab keys', keys);
-
+        const keys = await createKeys(name.value, email.value, passphrase.value, type.value, curve.value)
         if (keys) {
-          const { privateKey, publicKey, revocationCertificate } = keys;
-          console.log('What revocationCertificate', revocationCertificate);
-          console.log('What privateKey stringify', privateKey.armor());
-          console.log('What privateKey toPublic', privateKey.toPublic());
-          LocalStorage.set('signedmail-current', {
-            name: name.value,
-            email: email.value,
-            publicKey
-          });
-          LocalStorage.set(`signedmail-public-${email.value}`, {
-            name: name.value,
-            email: email.value,
-            publicKey
-          });
-          SessionStorage.set(`signedmail-private-${email.value}`, privateKey);
+          await store.dispatch('keys/addKeys', keys);
 
           emit('newKeys', keys);
         }
@@ -98,7 +93,12 @@ export default defineComponent({
       name, 
       email, 
       passphrase,  
-      pgpEmailRegex, 
+      emailRegex, 
+      expanded,
+      type,
+      curve,
+      createTypeOptions,
+      createCurveOptions,
       handleCreateKeys
     };
   }
