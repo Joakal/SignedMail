@@ -33,6 +33,7 @@
             v-for="col in props.cols"
             :key="col.name"
             :props="props"
+             @click="props.expand = !props.expand"
           >
             {{ col.value }}
           </q-td>
