@@ -51,12 +51,12 @@
 
 const linksList = [
   {
-    title: 'Encrypt or Sign',
+    title: 'Encrypt',
     icon: 'lock',
     link: '/'
   },
   {
-    title: 'Decrypt',
+    title: 'Decrypt or Sign',
     icon: 'lock_open',
     link: '/decrypt'
   },

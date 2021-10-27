@@ -15,10 +15,30 @@
         />
       </template>
     </q-input>
-    <div class="row justify-evenly q-pa-xs">
+    <div class="row justify-center q-pa-sm q-gutter-md">
       <q-btn color="primary" label="Encrypt" @click="handleEncrypt" />
-      <q-btn color="secondary" label="Sign" @click="handleSigning" />
-      <q-btn label="Reset" @click="handleSigning" />
+      <q-select
+        filled
+        use-input
+        hide-selected
+        fill-input
+        input-debounce="0"
+        :options="options"
+        hint="Basic filtering"
+        option-value="key"
+        option-label="userID"
+        style="width: 250px; padding-bottom: 32px"
+        @filter="filterFn"
+        :modelValue="publicKey"
+      >
+        <template v-slot:no-option>
+          <q-item>
+            <q-item-section class="text-grey">
+              No results
+            </q-item-section>
+          </q-item>
+        </template>
+      </q-select>
     </div>
     <q-input v-model="output" filled readonly type="textarea" label="Output">
       <template v-slot:append>
@@ -34,9 +54,10 @@
 
 <script lang="ts">
 import { defineComponent, defineAsyncComponent, ref } from 'vue';
+import { useStore } from 'vuex';
+import { storeKey } from 'src/store';
 import {encryptMessage, signMessage, testEncrypt} from 'src/util/encryption';
 import { addToClipboard } from 'src/util/clipboard'
-
 
 export default defineComponent({
   name: 'PageIndex',
@@ -49,6 +70,8 @@ export default defineComponent({
     const isPwd = ref(false);
     const input = ref('String')
     const output = ref('String')
+    const publicKey = ref(null);
+    const store = useStore(storeKey)
 
     const handleEncrypt = () => {
       // TODO Ask for passphrase
@@ -116,9 +139,30 @@ export default defineComponent({
     //   //   }, successCallback, errorCallback);
 
     // }
+    const publicKeys = store.state.keys.publicKeys;
+    const options = ref(publicKeys);
 
-
-    return { isPwd, input, output, handleEncrypt, handleSigning, addToClipboard };
+    return { 
+      isPwd, 
+      input, 
+      output, 
+      publicKey,
+      options,
+      handleEncrypt, 
+      addToClipboard,
+      filterFn: (inputValue: string, doneFn: (callBackFn: () => void) => void) => {
+        if (inputValue === '') {
+          doneFn(() => {
+            options.value = publicKeys
+          })
+          return
+        }
+        doneFn(() => {
+          const needle = inputValue.toLowerCase()
+          options.value = publicKeys.filter(v => v.userID.toLowerCase().indexOf(needle) > -1)
+        })
+      },
+    }
   }
 });
 </script>

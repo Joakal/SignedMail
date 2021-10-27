@@ -22,8 +22,6 @@
 </template>
 
 <script lang="ts">
-/* eslint-disable @typescript-eslint/no-unsafe-return */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { defineComponent, computed } from 'vue'
 import { mapGetters, useStore } from 'vuex';
 import { storeKey } from 'src/store'
