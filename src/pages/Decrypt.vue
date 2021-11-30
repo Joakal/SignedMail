@@ -5,17 +5,12 @@
     </div>
     <q-form @submit="handleDecrypt" >
       <div class="fit col">
-        <q-input v-model="input" filled :type="isPwd ? 'password' : 'textarea'" label="Input" :disable="!privateKey?.key">
+        <q-input v-model="input" filled label="Input" type="textarea" :disable="!privateKey?.key">
           <template v-slot:append>
             <q-icon
               name="content_copy"
               class="cursor-pointer"
               @click="addToClipboard({label: 'Input', value: input})"
-            />
-            <q-icon
-              :name="isPwd ? 'visibility_off' : 'visibility'"
-              class="cursor-pointer"
-              @click="isPwd = !isPwd"
             />
           </template>
         </q-input>
@@ -39,6 +34,7 @@
                 hide-selected
                 fill-input
                 input-debounce="0"
+                clearable
                 :options="privateKeyOptions"
                 hint="Private Key to decrypt"
                 option-value="key"
@@ -64,7 +60,7 @@
                 input-debounce="0"
                 clearable
                 :options="publicKeyOptions"
-                hint="Public Key to verify signature (optional)"
+                hint="Public Key to verify signature"
                 option-value="key"
                 option-label="userID"
                 @filter="publicKeyFilterFn"
@@ -84,8 +80,13 @@
       </div>
     </q-form>
     <div class="fit">
-      <q-input v-model="output" filled readonly type="textarea" label="Output" counter>
+      <q-input v-model="output" filled readonly :type="isPwd ? 'password' : 'textarea'" label="Output" counter>
         <template v-slot:append>
+          <q-icon
+            :name="isPwd ? 'visibility_off' : 'visibility'"
+            class="cursor-pointer"
+            @click="isPwd = !isPwd"
+          />
           <q-icon
             name="content_copy"
             class="cursor-pointer"
@@ -98,7 +99,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, watch } from 'vue';
+import { defineComponent, ref, computed, watch } from 'vue';
 import { useQuasar } from 'quasar'
 import { useStore } from 'vuex';
 import { storeKey } from 'src/store';
@@ -116,12 +117,15 @@ export default defineComponent({
     const publicKey = ref(defaultPublicKey);
     const privateKey = ref(defaultPrivateKey);
     const decryptedBody = ref<IDecryptionResult>({ decrypted: '', verified: false });
-    const output = ref(decryptedBody.value.decrypted);
+    const publicKeyOptions = ref(publicKeys);
+    const privateKeyOptions = ref(privateKeys);
+    const output = computed(() => decryptedBody.value.decrypted);
 
     const handleDecrypt = async () => {
       if (privateKey.value) {
         try {
           decryptedBody.value = await decryptMessage(input.value, privateKey.value, publicKey.value)
+          console.log('Handling decrypt', decryptedBody)
         } catch ({message}) {
           $q.notify({
             type: 'negative',
@@ -137,9 +141,6 @@ export default defineComponent({
         });
       }
     };
-
-    const publicKeyOptions = ref(publicKeys);
-    const privateKeyOptions = ref(privateKeys);
     
     const publicKeyFilterFn = (inputValue: string, doneFn: (callBackFn: () => void) => void) => {
       if (inputValue === '') {

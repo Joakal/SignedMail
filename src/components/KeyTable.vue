@@ -4,6 +4,7 @@
       :title="title"
       :rows="keys"
       :columns="columns"
+      :filter="filter"
       row-key="key"
     >
       <template v-slot:header="props">
@@ -41,13 +42,13 @@
             <q-btn :icon="props.expand ? 'remove' : 'vpn_key'" color="primary" @click="props.expand = !props.expand">
               <q-tooltip>View {{label}}</q-tooltip>
             </q-btn>
-            <q-btn icon="content_copy" color="primary" @click="addToClipboard({label, value: props.row.keyString})">
+            <q-btn icon="content_copy" color="primary" @click="addToClipboard({label, value: props.row.key})">
               <q-tooltip>Copy {{label}}</q-tooltip>
             </q-btn>
-            <q-btn icon="download" color="secondary" @click="exportFile(`${fileName}.pub`, props.row.keyString)">
+            <q-btn icon="download" color="secondary" @click="exportFile(`${fileName}.pub`, props.row.key)">
               <q-tooltip>Download {{label}}</q-tooltip>
             </q-btn>
-            <q-btn icon="delete" color="negative" @click="confirmDeletion(props.row.keyString)">
+            <q-btn icon="delete" color="negative" @click="confirmDeletion(props.row.key)">
               <q-tooltip>Delete {{label}}</q-tooltip>
             </q-btn>
           </q-td>

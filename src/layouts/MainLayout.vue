@@ -64,8 +64,13 @@ const linksList = [
   },
   {
     title: 'Signing',
+    icon: 'create',
+    link: '/signing'
+  },
+  {
+    title: 'Verifying',
     icon: 'how_to_reg',
-    link: '/decrypt'
+    link: '/verifying'
   },
   {
     title: 'Public Keys',

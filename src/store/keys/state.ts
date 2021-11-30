@@ -11,11 +11,13 @@ export interface KeysStateInterface {
     encrypt: {
       privateKey?: IKeyRecord,
       publicKey?: IKeyRecord
-    },
+    }
     decrypt: {
       privateKey?: IKeyRecord,
       publicKey?: IKeyRecord
     }
+    signing?: IKeyRecord
+    verifying?: IKeyRecord
   }
 }
 
@@ -31,7 +33,9 @@ function state(): KeysStateInterface {
       decrypt: {
         privateKey: undefined,
         publicKey: undefined
-      }
+      },
+      signing: undefined,
+      verifying: undefined
     }
   };
 }

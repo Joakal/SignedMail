@@ -1,5 +1,5 @@
 <template>
-  <KeyTable title="Public Keys" label="public key" :keys="rows" />
+  <KeyTable title="Public Keys" label="public key" :keys="rows" @deleteKey="removeKey" />
 </template>
 
 <script lang="ts">

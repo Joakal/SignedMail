@@ -29,6 +29,12 @@ const mutation: MutationTree<KeysStateInterface> = {
   changeDefaultDecryptPublicKey(state, keyRecord: IKeyRecord) {
     state.defaults.decrypt.publicKey = keyRecord;
   },
+  changeDefaultSigning(state, keyRecord: IKeyRecord) {
+    state.defaults.signing = keyRecord;
+  },
+  changeDefaultVerifying(state, keyRecord: IKeyRecord) {
+    state.defaults.verifying = keyRecord;
+  }
 };
 
 export default mutation;

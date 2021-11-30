@@ -1,4 +1,4 @@
-import {readKey, decryptKey, readPrivateKey, encrypt, decrypt, createMessage, readMessage, generateKey, KeyPair, EllipticCurveName, KeyOptions, UserID, EncryptOptions, Message, MaybeStream, Data, DecryptOptions } from 'openpgp';
+import {readKey, decryptKey, readPrivateKey, encrypt, decrypt, createMessage, readMessage, generateKey, KeyPair, EllipticCurveName, KeyOptions, UserID, EncryptOptions, Message, MaybeStream, Data, DecryptOptions, sign, verify, VerifyOptions, readSignature } from 'openpgp';
 import { Dialog } from 'quasar'
 import { IKeyRecord } from 'src/store/keys/state';
 
@@ -82,19 +82,23 @@ export async function encryptMessage(body: string, publicKey: IKeyRecord, privat
 export async function decryptMessage(encryptedBody: string, privateKey: IKeyRecord, publicKey?: IKeyRecord): Promise<IDecryptionResult> {
   console.log('decryptMessage');
   const resolvedPrivateKey = await readPrivateKey({ armoredKey: privateKey.key });
-  console.log('resolvedPrivateKey');
+  console.log('resolvedPrivateKey', resolvedPrivateKey);
+  console.log('resolvedPrivateKey getKeyID', resolvedPrivateKey.getKeyID().toHex())
+  console.log('resolvedPrivateKey getKeyIDs', resolvedPrivateKey.getKeyIDs().map(key => key.toHex()))
 
-  let decryptedPrivateKey = undefined;
+  const passphrase = await requestPassphrase();
+  const decryptedPrivateKey = await decryptKey({
+    privateKey: resolvedPrivateKey,
+    passphrase
+  });
 
-    const passphrase = await requestPassphrase();
-    decryptedPrivateKey = await decryptKey({
-      privateKey: resolvedPrivateKey,
-      passphrase
-    });
-
+    console.log('encryptedBody', encryptedBody);
   const message = await readMessage({
       armoredMessage: encryptedBody // parse armored message
   });
+  console.log('message', message);
+  console.log('message getEncryptionKeyIDs', message.getEncryptionKeyIDs().map(key => key.toHex()))
+  console.log('message getSigningKeyIDs', message.getSigningKeyIDs().map(key => key.toHex()))
 
   const decryptBody = {
     message,
@@ -103,6 +107,7 @@ export async function decryptMessage(encryptedBody: string, privateKey: IKeyReco
 
   if (publicKey) {
     const resolvedPublicKey = await readKey({ armoredKey: publicKey.key });
+    console.log('resolvedPublicKey', resolvedPublicKey);
 
     decryptBody.expectSigned = true;
     decryptBody.verificationKeys = resolvedPublicKey;
@@ -121,22 +126,50 @@ export async function decryptMessage(encryptedBody: string, privateKey: IKeyReco
   return { decrypted, verified } as IDecryptionResult;
 }
 
-export function signMessage(body: string): string {
+export async function signMessage(body: string, privateKey: IKeyRecord): Promise<string> {
 
-  console.log('Signature is signMessage');
-  console.log('Signature is signMessage');
-  const encryptedBody = body;
+  const resolvedPrivateKey = await readPrivateKey({ armoredKey: privateKey.key });
+  const passphrase = await requestPassphrase();
+  const decryptedPrivateKey = await decryptKey({
+    privateKey: resolvedPrivateKey,
+    passphrase
+  });
 
-  return encryptedBody;
+  const message = await createMessage({ text: body });
+  console.log('Signature is signMessage');
+  const cleartextMessage  = await sign({
+    message,
+    signingKeys: decryptedPrivateKey,
+    detached: true
+  });
+  console.log('cleartextMessage', cleartextMessage)
+
+  return cleartextMessage;
 }
 
-// export function storeSecret(key: string): string {
-  
+export async function verifyMessage(body: string, publicKey: IKeyRecord, detachedSignature: string): Promise<boolean> {
+  const resolvedPublicKey = await readKey({ armoredKey: publicKey.key });
+  const message = await createMessage({ text: body });
+  const signature = await readSignature({
+      armoredSignature: detachedSignature // parse detached signature
+  });
 
-// }
 
-// export encryption;
+  type Options = VerifyOptions & { message: Message<MaybeStream<Data>>} 
+  const verifyBody: Options = {
+    verificationKeys: resolvedPublicKey,
+    message,
+    signature
+  } 
 
+  const verificationResult = await verify(verifyBody);
+  console.log('verify done');
+  const { verified, keyID } = verificationResult.signatures[0];
+  await verified; // throws on invalid signature
+  console.log('Signed by key id ' + keyID.toHex());
+
+  return true;
+}
 
 export async function testEncrypt(): Promise<string> {
   console.log('Starting TestEncrypt')
