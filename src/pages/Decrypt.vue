@@ -1,11 +1,11 @@
 <template>
   <q-page>
     <div class="flex flex-center">
-      <div class="text-h4">Encrypt</div>
+      <div class="text-h4">Decrypt</div>
     </div>
-    <q-form @submit="handleEncrypt" >
+    <q-form @submit="handleDecrypt" >
       <div class="fit col">
-        <q-input v-model="input" filled :type="isPwd ? 'password' : 'textarea'" label="Input" :disable="!publicKey?.key">
+        <q-input v-model="input" filled :type="isPwd ? 'password' : 'textarea'" label="Input" :disable="!privateKey?.key">
           <template v-slot:append>
             <q-icon
               name="content_copy"
@@ -22,7 +22,7 @@
       </div>
       <div class="fit col justify-center q-pa-sm q-gutter-md">
         <div class="row q-gutter-md">
-          <q-btn color="primary" label="Encrypt" @click="handleEncrypt" :disable="!publicKey?.key" />
+          <q-btn color="primary" label="Decrypt" @click="handleDecrypt" :disable="!privateKey?.key" />
         </div>
         <div class="row">
           <q-expansion-item
@@ -30,7 +30,7 @@
             expand-separator
             icon="perm_identity"
             label="Settings"
-            :caption="publicKey?.userID ? publicKey.userID : 'Please add a public key'"
+            :caption="privateKey?.userID ? privateKey.userID : 'Please add a private key'"
           >
             <div class="row q-pa-sm q-gutter-md">
               <q-select
@@ -39,12 +39,12 @@
                 hide-selected
                 fill-input
                 input-debounce="0"
-                :options="publicKeyOptions"
-                hint="Public Key"
+                :options="privateKeyOptions"
+                hint="Private Key to decrypt"
                 option-value="key"
                 option-label="userID"
-                @filter="publicKeyFilterFn"
-                v-model="publicKey"
+                @filter="privateKeyFilterFn"
+                v-model="privateKey"
               >
                 <template v-slot:no-option>
                   <q-item>
@@ -63,12 +63,12 @@
                 fill-input
                 input-debounce="0"
                 clearable
-                :options="privateKeyOptions"
-                hint="Private Key signing (optional)"
+                :options="publicKeyOptions"
+                hint="Public Key to verify signature (optional)"
                 option-value="key"
                 option-label="userID"
-                @filter="privateKeyFilterFn"
-                v-model="privateKey"
+                @filter="publicKeyFilterFn"
+                v-model="publicKey"
               >
                 <template v-slot:no-option>
                   <q-item>
@@ -102,28 +102,38 @@ import { defineComponent, ref, watch } from 'vue';
 import { useQuasar } from 'quasar'
 import { useStore } from 'vuex';
 import { storeKey } from 'src/store';
-import {encryptMessage} from 'src/util/encryption';
+import {decryptMessage, IDecryptionResult} from 'src/util/encryption';
 import { addToClipboard } from 'src/util/clipboard'
 
 export default defineComponent({
-  name: 'Encrypt',
+  name: 'Decrypt',
   setup() {
     const $q = useQuasar()
     const store = useStore(storeKey);
-    const {publicKeys, privateKeys, defaults: {encrypt: {privateKey: defaultPrivateKey, publicKey: defaultPublicKey}}} = store.state.keys;
+    const {publicKeys, privateKeys, defaults: {decrypt: {privateKey: defaultPrivateKey, publicKey: defaultPublicKey}}} = store.state.keys;
     const isPwd = ref(false);
     const input = ref('')
-    const output = ref('')
     const publicKey = ref(defaultPublicKey);
     const privateKey = ref(defaultPrivateKey);
+    const decryptedBody = ref<IDecryptionResult>({ decrypted: '', verified: false });
+    const output = ref(decryptedBody.value.decrypted);
 
-    const handleEncrypt = async () => {
-      if (publicKey.value) {
-        output.value = await encryptMessage(input.value, publicKey.value, privateKey.value)
+    const handleDecrypt = async () => {
+      if (privateKey.value) {
+        try {
+          decryptedBody.value = await decryptMessage(input.value, privateKey.value, publicKey.value)
+        } catch ({message}) {
+          $q.notify({
+            type: 'negative',
+            message: message as string,
+          });
+        }
+
+        console.log('HMM', decryptedBody.value);
       } else {
         $q.notify({
           type: 'negative',
-          message: 'You must have a public key to encrypt to',
+          message: 'You must have a private key to decrypt from',
         });
       }
     };
@@ -158,11 +168,11 @@ export default defineComponent({
     };
 
     watch(publicKey, (currentValue) => {      
-      store.commit('keys/changeDefaultEncryptPublicKey', currentValue)
+      store.commit('keys/changeDefaultDecryptPublicKey', currentValue)
     });
 
     watch(privateKey, (currentValue) => {      
-      store.commit('keys/changeDefaultEncryptPrivateKey', currentValue)
+      store.commit('keys/changeDefaultDecryptPrivateKey', currentValue)
     });
 
     return { 
@@ -173,7 +183,7 @@ export default defineComponent({
       publicKeyOptions,
       privateKey,
       privateKeyOptions,
-      handleEncrypt, 
+      handleDecrypt, 
       addToClipboard,
       publicKeyFilterFn,
       privateKeyFilterFn

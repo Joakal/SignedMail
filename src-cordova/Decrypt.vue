@@ -49,7 +49,7 @@ export default defineComponent({
 
     const handleEncrypt = () => {
       // TODO Ask for passphrase
-      output.value = encryptMessage(input.value)
+      // output.value = encryptMessage(input.value)
     };
 
     // const handleDecrypt = () => {

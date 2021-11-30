@@ -39,12 +39,13 @@ const routes: RouteRecordRaw[] = [
     component: () => import('layouts/MainLayout.vue'),
     children: [
       { name: 'encrypt', path: '', component: () => import('src/pages/Encrypt.vue')},
-      // { name: 'decrypt', path: 'decrypt', component: () => import('src/pages/Decrypt.vue'), beforeEnter: (_to, _from, next) => checkKey(next) },
+      { name: 'decrypt', path: 'decrypt', component: () => import('src/pages/Decrypt.vue')},
+      // { name: 'signing', path: 'signing', component: () => import('src/pages/Signing.vue')},
       { name: 'public', path: 'public', component: () => import('src/pages/PublicKeys.vue') },
       { name: 'private', path: 'private', component: () => import('src/pages/PrivateKeys.vue') },
       { name: 'add', path: 'add', component: () => import('src/pages/AddingKeys.vue') },
-      { name: 'about', path: 'about', component: () => import('src/pages/About.vue') },
-      { name: 'help', path: 'help', component: () => import('src/pages/Help.vue') }
+      { name: 'help', path: 'help', component: () => import('src/pages/Help.vue') },
+      { name: 'about', path: 'about', component: () => import('src/pages/About.vue') }
     ],
   },
 

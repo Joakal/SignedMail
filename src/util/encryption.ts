@@ -1,7 +1,20 @@
-import {readKey, decryptKey, readPrivateKey, encrypt, decrypt, createMessage, readMessage, generateKey, KeyPair, EllipticCurveName, KeyOptions, UserID } from 'openpgp';
+import {readKey, decryptKey, readPrivateKey, encrypt, decrypt, createMessage, readMessage, generateKey, KeyPair, EllipticCurveName, KeyOptions, UserID, EncryptOptions, Message, MaybeStream, Data, DecryptOptions } from 'openpgp';
+import { Dialog } from 'quasar'
+import { IKeyRecord } from 'src/store/keys/state';
+
 
 export interface CombinedKeyPair extends KeyPair {
   revocationCertificate: string
+}
+
+export interface CombinedEncryptionOptions extends EncryptOptions {
+  message: Message<MaybeStream<Data>>;
+  format?: 'armored' | undefined;
+}
+
+export interface IDecryptionResult {
+  verified: boolean
+  decrypted: string
 }
 
 // Pulled from OpenPGP's own email regex
@@ -21,21 +34,91 @@ export async function createKeys(name: string, email: string, passphrase: string
   });
 }
 
-export function encryptMessage(body: string): string {
-
-  console.log('Signature is encryptMessage');
-  console.log('Signature is encryptMessage');
-  const encryptedBody = body;
-
-  return encryptedBody;
+async function requestPassphrase (): Promise<string | undefined> {
+  return await new Promise(resolve => Dialog.create({
+    title: 'Passphrase to unlock private key',
+    message: 'Passphrase?',
+    prompt: {
+      model: '',
+      type: 'text'
+    },
+    cancel: true  }).onOk((data: string)=>{
+      console.log('onOk data', data)
+      return resolve(data)
+    }).onCancel(()=>resolve(undefined)));
 }
 
-export function decryptMessage(encryptedBody: string): string {
+export async function encryptMessage(body: string, publicKey: IKeyRecord, privateKey?: IKeyRecord): Promise<string> {
+  console.log('Signature is encryptMessage', publicKey);
+  const resolvedPublicKey = await readKey({ armoredKey: publicKey.key });
+  console.log('Signature is encryptMessage');
+  const message = await createMessage({ text: body });
+  const encryptBody = {
+    message,
+    encryptionKeys: resolvedPublicKey,
+  } as CombinedEncryptionOptions
 
-  console.log('Signature is decryptMessage');
-  const body = encryptedBody;
+  if (privateKey) {
+    const passphrase = await requestPassphrase();
 
-  return body;
+    if (passphrase === null) {
+      return ''; 
+    }
+    console.log('passphrase', passphrase);
+    
+    const resolvedPrivateKey = await readPrivateKey({ armoredKey: privateKey.key });
+    const decryptedPrivateKey = await decryptKey({
+      privateKey: resolvedPrivateKey,
+      passphrase
+    });
+
+    encryptBody.signingKeys = decryptedPrivateKey
+  }
+  console.log('encryptBody', encryptBody);
+
+  return await encrypt(encryptBody) as string;
+}
+
+export async function decryptMessage(encryptedBody: string, privateKey: IKeyRecord, publicKey?: IKeyRecord): Promise<IDecryptionResult> {
+  console.log('decryptMessage');
+  const resolvedPrivateKey = await readPrivateKey({ armoredKey: privateKey.key });
+  console.log('resolvedPrivateKey');
+
+  let decryptedPrivateKey = undefined;
+
+    const passphrase = await requestPassphrase();
+    decryptedPrivateKey = await decryptKey({
+      privateKey: resolvedPrivateKey,
+      passphrase
+    });
+
+  const message = await readMessage({
+      armoredMessage: encryptedBody // parse armored message
+  });
+
+  const decryptBody = {
+    message,
+    decryptionKeys: decryptedPrivateKey,
+  } as DecryptOptions
+
+  if (publicKey) {
+    const resolvedPublicKey = await readKey({ armoredKey: publicKey.key });
+
+    decryptBody.expectSigned = true;
+    decryptBody.verificationKeys = resolvedPublicKey;
+  }
+
+  const { data: decrypted, signatures} = await decrypt(decryptBody)
+  console.log('decrypted', decrypted);
+
+  let verified = undefined;
+
+  if (publicKey) {
+    await signatures[0].verified;
+    verified = true;
+  }
+
+  return { decrypted, verified } as IDecryptionResult;
 }
 
 export function signMessage(body: string): string {

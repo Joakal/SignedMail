@@ -1,8 +1,8 @@
 <template>
-  <div>
-    <div>The below have been temporarily saved and cleared on browser close. Please save the below to a separate location as backup. If you lose your device, there is no way to retrieve the <strong>private key</strong> or <strong>revocation certificate</strong> without backups.</div>
+  <div class="q-gutter-md">
+    <div>The below have been temporarily saved and may be cleared on browser close. Please save the below to a separate device as backup. If you lose your device, there is no way to retrieve the <strong>private key</strong> or <strong>revocation certificate</strong> without backups.</div>
     <div v-if="keys.privateKey">
-      <q-input :value="keys.privateKey.armor()" filled readonly type="textarea" label="Private Key">
+      <q-input :model-value="keys.privateKey.armor()" filled readonly type="textarea" label="Private Key">
         <template v-slot:append>
           <q-icon
             name="download"
@@ -13,7 +13,7 @@
       </q-input>
     </div>
     <div v-if="keys.revocationCertificate">
-      <q-input value="keys.revocationCertificate" filled readonly type="textarea" label="Revocation Certificate">
+      <q-input :model-value="keys.revocationCertificate" filled readonly type="textarea" label="Revocation Certificate">
         <template v-slot:append>
           <q-icon
             name="download"
@@ -24,7 +24,7 @@
       </q-input>
     </div>
     <div>
-      <q-input :value="keys.publicKey.armor()" filled readonly type="textarea" label="Public Key">
+      <q-input :model-value="keys.publicKey.armor()" filled readonly type="textarea" label="Public Key">
         <template v-slot:append>
           <q-icon
             name="content_copy"

@@ -41,9 +41,11 @@
       </q-list>
     </q-drawer>
 
-    <q-page-container>
-      <router-view />
-    </q-page-container>
+    <div class="flex flex-center">
+      <q-page-container style="max-width: 1200px" class="fit">
+        <router-view />
+      </q-page-container>
+    </div>
   </q-layout>
 </template>
 
@@ -56,8 +58,13 @@ const linksList = [
     link: '/'
   },
   {
-    title: 'Decrypt or Sign',
+    title: 'Decrypt',
     icon: 'lock_open',
+    link: '/decrypt'
+  },
+  {
+    title: 'Signing',
+    icon: 'how_to_reg',
     link: '/decrypt'
   },
   {
@@ -71,7 +78,7 @@ const linksList = [
     link: '/private'
   },
   {
-    title: 'Add',
+    title: 'Add Key',
     icon: 'vpn_key',
     link: '/add'
   },

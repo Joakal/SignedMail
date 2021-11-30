@@ -2,28 +2,37 @@ export interface IKeyRecord {
   key: string;
   userID: string;
 }
-// userIDs: MaybeArray<UserID>;
-// passphrase?: string;
-// type?: 'ecc' | 'rsa';
-// curve?: EllipticCurveName;
-// rsaBits?: number;
-// keyExpirationTime?: number;
-// date?: Date;
-// subkeys?: SubkeyOptions[];
-// format?: 'armored' | 'object' | 'binary';
-// config?: PartialConfig;
 
 export interface KeysStateInterface {
-  currentKey: string | undefined;
-  publicKeys: IKeyRecord[]
-  privateKeys: IKeyRecord[]
+  currentKey?: string;
+  publicKeys: IKeyRecord[];
+  privateKeys: IKeyRecord[];
+  defaults: {
+    encrypt: {
+      privateKey?: IKeyRecord,
+      publicKey?: IKeyRecord
+    },
+    decrypt: {
+      privateKey?: IKeyRecord,
+      publicKey?: IKeyRecord
+    }
+  }
 }
 
 function state(): KeysStateInterface {
   return {
-    currentKey: undefined,
     publicKeys: [],
     privateKeys: [],
+    defaults: {
+      encrypt: {
+        privateKey: undefined,
+        publicKey: undefined
+      },
+      decrypt: {
+        privateKey: undefined,
+        publicKey: undefined
+      }
+    }
   };
 }
 

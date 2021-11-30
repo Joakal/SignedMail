@@ -83,7 +83,7 @@ export default defineComponent({
         const {message} = error as Error;
         $q.notify({
           type: 'negative',
-          message: message,
+          message,
         });
       }
     };
