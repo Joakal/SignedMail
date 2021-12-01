@@ -171,6 +171,23 @@ export async function verifyMessage(body: string, publicKey: IKeyRecord, detache
   return true;
 }
 
+export async function getPrivateKeyId(key: string) {
+  const keys = await readKey({ armoredKey: key })
+  const encryptionKey =  await keys.getEncryptionKey();
+  return encryptionKey.getKeyID().toHex();
+}
+
+export async function getPublicKeyId(key: string) {
+  const keys = await readKey({ armoredKey: key })
+  const signingKey =  await keys.getSigningKey();
+  return signingKey.getKeyID().toHex();
+}
+
+export async function getUserIDs(key: string) {
+  const keys = await readKey({ armoredKey: key })
+  return keys.users.map(user => user.userID?.userID);
+}
+
 export async function testEncrypt(): Promise<string> {
   console.log('Starting TestEncrypt')
   // put keys in backtick (``) to avoid errors caused by spaces or tabs

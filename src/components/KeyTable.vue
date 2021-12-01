@@ -70,10 +70,17 @@ import { QTable, useQuasar, exportFile } from 'quasar';
 import { addToClipboard } from 'src/util/clipboard'
 
 const columns: QTable['columns'] = [{
-  name: 'userID',
+  name: 'keyID',
+  required: true,
+  label: 'Key ID',
+  field: 'keyID',
+  align: 'left',
+  sortable: true
+},{
+  name: 'userIDs',
   required: true,
   label: 'User ID',
-  field: 'userID',
+  field: 'userIDs',
   align: 'left',
   sortable: true
 }];

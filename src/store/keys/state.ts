@@ -1,6 +1,7 @@
 export interface IKeyRecord {
   key: string;
   userID: string;
+  keyID: string;
 }
 
 export interface KeysStateInterface {
