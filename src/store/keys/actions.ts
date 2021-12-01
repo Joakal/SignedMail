@@ -13,12 +13,11 @@ const formatForTable = async (keyType: string, key: string) => {
   }
 
   const userIDArray = await getUserIDs(key);
-  const userIDs = userIDArray.join(', ');
-  console.log('userIDs', userIDs, userIDArray)
+  const userID = userIDArray.join(', ');
   
   return {
     key,
-    userIDs,
+    userID,
     keyID
   }
 }

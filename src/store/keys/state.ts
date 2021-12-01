@@ -10,15 +10,15 @@ export interface KeysStateInterface {
   privateKeys: IKeyRecord[];
   defaults: {
     encrypt: {
-      privateKey?: IKeyRecord,
-      publicKey?: IKeyRecord
+      privateKeyID?: string
+      publicKeyID?: string
     }
     decrypt: {
-      privateKey?: IKeyRecord,
-      publicKey?: IKeyRecord
+      privateKeyID?: string
+      publicKeyID?: string
     }
-    signing?: IKeyRecord
-    verifying?: IKeyRecord
+    signingKeyID?: string
+    verifyingKeyID?: string
   }
 }
 
@@ -28,15 +28,15 @@ function state(): KeysStateInterface {
     privateKeys: [],
     defaults: {
       encrypt: {
-        privateKey: undefined,
-        publicKey: undefined
+        privateKeyID: undefined,
+        publicKeyID: undefined
       },
       decrypt: {
-        privateKey: undefined,
-        publicKey: undefined
+        privateKeyID: undefined,
+        publicKeyID: undefined
       },
-      signing: undefined,
-      verifying: undefined
+      signingKeyID: undefined,
+      verifyingKeyID: undefined
     }
   };
 }

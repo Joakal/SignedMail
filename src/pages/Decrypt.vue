@@ -111,11 +111,11 @@ export default defineComponent({
   setup() {
     const $q = useQuasar()
     const store = useStore(storeKey);
-    const {publicKeys, privateKeys, defaults: {decrypt: {privateKey: defaultPrivateKey, publicKey: defaultPublicKey}}} = store.state.keys;
+    const {publicKeys, privateKeys, defaults: {decrypt: {privateKeyID, publicKeyID}}} = store.state.keys;
     const isPwd = ref(false);
-    const input = ref('')
-    const publicKey = ref(defaultPublicKey);
-    const privateKey = ref(defaultPrivateKey);
+    const input = ref('');
+    const publicKey = ref(publicKeys.find(key => key.keyID === publicKeyID));
+    const privateKey = ref(privateKeys.find(key => key.keyID === privateKeyID));
     const decryptedBody = ref<IDecryptionResult>({ decrypted: '', verified: false });
     const publicKeyOptions = ref(publicKeys);
     const privateKeyOptions = ref(privateKeys);
@@ -143,6 +143,7 @@ export default defineComponent({
     };
     
     const publicKeyFilterFn = (inputValue: string, doneFn: (callBackFn: () => void) => void) => {
+      console.log('INPUTVALUE', inputValue)
       if (inputValue === '') {
         doneFn(() => {
           publicKeyOptions.value = publicKeys
@@ -168,12 +169,12 @@ export default defineComponent({
       })
     };
 
-    watch(publicKey, (currentValue) => {      
-      store.commit('keys/changeDefaultDecryptPublicKey', currentValue)
+    watch(publicKey, (currentValue) => {
+      store.commit('keys/changeDefaultDecryptPublicKey', currentValue?.keyID)
     });
 
     watch(privateKey, (currentValue) => {      
-      store.commit('keys/changeDefaultDecryptPrivateKey', currentValue)
+      store.commit('keys/changeDefaultDecryptPrivateKey', currentValue?.keyID)
     });
 
     return { 

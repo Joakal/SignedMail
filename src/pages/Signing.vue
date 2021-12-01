@@ -81,11 +81,11 @@ export default defineComponent({
   setup() {
     const $q = useQuasar()
     const store = useStore(storeKey);
-    const {privateKeys, defaults: {signing: defaultPrivateKey}} = store.state.keys;
+    const {privateKeys, defaults: {signingKeyID}} = store.state.keys;
     const isPwd = ref(false);
     const input = ref('')
     const output = ref('')
-    const privateKey = ref(defaultPrivateKey);
+    const privateKey = ref(privateKeys.find(key => key.keyID === signingKeyID));
 
     const handleSigning = async () => {
       if (privateKey.value) {
@@ -117,7 +117,7 @@ export default defineComponent({
     };
 
     watch(privateKey, (currentValue) => {      
-      store.commit('keys/changeDefaultSigning', currentValue)
+      store.commit('keys/changeDefaultSigning', currentValue?.keyID)
     });
 
     return { 

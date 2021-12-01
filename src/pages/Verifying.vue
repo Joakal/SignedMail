@@ -79,11 +79,11 @@ export default defineComponent({
   setup() {
     const $q = useQuasar()
     const store = useStore(storeKey);
-    const {publicKeys, defaults: {verifying: defaultPublicKey}} = store.state.keys;
+    const {publicKeys, defaults: {verifyingKeyID}} = store.state.keys;
     const isPwd = ref(false);
     const input = ref('')
     const detachedSignature = ref('')
-    const publicKey = ref(defaultPublicKey);
+    const publicKey = ref(publicKeys.find(key => key.keyID === verifyingKeyID));
 
     const handleVerifying = async () => {
       if (publicKey.value) {
@@ -123,7 +123,7 @@ export default defineComponent({
     };
 
     watch(publicKey, (currentValue) => {      
-      store.commit('keys/changeDefaultVerifying', currentValue)
+      store.commit('keys/changeDefaultVerifying', currentValue?.keyID)
     });
 
     return { 

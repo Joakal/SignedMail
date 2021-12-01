@@ -110,12 +110,12 @@ export default defineComponent({
   setup() {
     const $q = useQuasar()
     const store = useStore(storeKey);
-    const {publicKeys, privateKeys, defaults: {encrypt: {privateKey: defaultPrivateKey, publicKey: defaultPublicKey}}} = store.state.keys;
+    const {publicKeys, privateKeys, defaults: {encrypt: {privateKeyID, publicKeyID}}} = store.state.keys;
     const isPwd = ref(false);
     const input = ref('')
     const output = ref('')
-    const publicKey = ref(defaultPublicKey);
-    const privateKey = ref(defaultPrivateKey);
+    const publicKey = ref(publicKeys.find(key => key.keyID === publicKeyID));
+    const privateKey = ref(privateKeys.find(key => key.keyID === privateKeyID));
 
     const handleEncrypt = async () => {
       if (publicKey.value) {
@@ -158,11 +158,11 @@ export default defineComponent({
     };
 
     watch(publicKey, (currentValue) => {      
-      store.commit('keys/changeDefaultEncryptPublicKey', currentValue)
+      store.commit('keys/changeDefaultEncryptPublicKey', currentValue?.keyID)
     });
 
     watch(privateKey, (currentValue) => {      
-      store.commit('keys/changeDefaultEncryptPrivateKey', currentValue)
+      store.commit('keys/changeDefaultEncryptPrivateKey', currentValue?.keyID)
     });
 
     return { 

@@ -17,23 +17,23 @@ const mutation: MutationTree<KeysStateInterface> = {
   removePrivateKey(state, removedKey: string) {
     state.privateKeys = state.privateKeys.filter(keyRecord => keyRecord.key !== removedKey);
   },
-  changeDefaultEncryptPrivateKey(state, keyRecord: IKeyRecord) {
-    state.defaults.encrypt.privateKey = keyRecord;
+  changeDefaultEncryptPrivateKey(state, keyID: string) {
+    state.defaults.encrypt.privateKeyID = keyID;
   },
-  changeDefaultEncryptPublicKey(state, keyRecord: IKeyRecord) {
-    state.defaults.encrypt.publicKey = keyRecord;
+  changeDefaultEncryptPublicKey(state, keyID: string) {
+    state.defaults.encrypt.publicKeyID = keyID;
   },
-  changeDefaultDecryptPrivateKey(state, keyRecord: IKeyRecord) {
-    state.defaults.decrypt.privateKey = keyRecord;
+  changeDefaultDecryptPrivateKey(state, keyID: string) {
+    state.defaults.decrypt.privateKeyID = keyID;
   },
-  changeDefaultDecryptPublicKey(state, keyRecord: IKeyRecord) {
-    state.defaults.decrypt.publicKey = keyRecord;
+  changeDefaultDecryptPublicKey(state, keyID: string) {
+    state.defaults.decrypt.publicKeyID = keyID;
   },
-  changeDefaultSigning(state, keyRecord: IKeyRecord) {
-    state.defaults.signing = keyRecord;
+  changeDefaultSigning(state, keyID: string) {
+    state.defaults.signingKeyID = keyID;
   },
-  changeDefaultVerifying(state, keyRecord: IKeyRecord) {
-    state.defaults.verifying = keyRecord;
+  changeDefaultVerifying(state, keyID: string) {
+    state.defaults.verifyingKeyID = keyID;
   }
 };
 

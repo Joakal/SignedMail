@@ -77,10 +77,10 @@ const columns: QTable['columns'] = [{
   align: 'left',
   sortable: true
 },{
-  name: 'userIDs',
+  name: 'userID',
   required: true,
   label: 'User ID',
-  field: 'userIDs',
+  field: 'userID',
   align: 'left',
   sortable: true
 }];
