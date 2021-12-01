@@ -3,9 +3,6 @@
     <div>
       <NewKey @newKeys="displayKey" />
     </div>
-    <div>
-      <AddKey @newKeys="displayKey" />
-    </div>
   </div>
   <div class="q-pa-md row" v-if="showKeys">
     <ShowKeys :keys="showKeys" />
@@ -20,7 +17,6 @@ export default defineComponent({
   name: 'AddingKeys',
   components: {
     NewKey: defineAsyncComponent(() => import('components/NewKey.vue')),
-    AddKey: defineAsyncComponent(() => import('components/AddKey.vue')),
     ShowKeys: defineAsyncComponent(() => import('components/ShowKeys.vue'))
   },
   setup() {
@@ -28,8 +24,6 @@ export default defineComponent({
 
     const displayKey = (keys: CombinedKeyPair) => {
       showKeys.value = keys;
-
-      console.log('We got new keys', keys)
     }
 
     return { 

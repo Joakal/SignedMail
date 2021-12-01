@@ -5,7 +5,6 @@ export interface IKeyRecord {
 }
 
 export interface KeysStateInterface {
-  currentKey?: string;
   publicKeys: IKeyRecord[];
   privateKeys: IKeyRecord[];
   defaults: {
@@ -19,6 +18,7 @@ export interface KeysStateInterface {
     }
     signingKeyID?: string
     verifyingKeyID?: string
+    displayKeyID?: string
   }
 }
 
@@ -36,7 +36,8 @@ function state(): KeysStateInterface {
         publicKeyID: undefined
       },
       signingKeyID: undefined,
-      verifyingKeyID: undefined
+      verifyingKeyID: undefined,
+      displayKeyID: undefined
     }
   };
 }

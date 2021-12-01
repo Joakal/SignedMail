@@ -15,7 +15,7 @@
           SignedMail
         </q-toolbar-title>
 
-        <q-btn color="secondary" label="Public Key" @click="showPublicKey" />
+        <GlobalPublicKey />
       </q-toolbar>
     </q-header>
 
@@ -108,7 +108,8 @@ export default defineComponent({
   name: 'MainLayout',
 
   components: {
-    EssentialLink: defineAsyncComponent(() => import('components/EssentialLink.vue'))
+    EssentialLink: defineAsyncComponent(() => import('components/EssentialLink.vue')),
+    GlobalPublicKey: defineAsyncComponent(() => import('components/GlobalPublicKey.vue'))
   },
 
   setup () {
@@ -121,17 +122,12 @@ export default defineComponent({
       store.commit('initialiseStore', oldState);
     }
 
-    const showPublicKey = () => {
-      console.log('YEAH');
-    }
-
     return {
       essentialLinks: linksList,
       leftDrawerOpen,
       toggleLeftDrawer () {
         leftDrawerOpen.value = !leftDrawerOpen.value
       },
-      showPublicKey,
     }
   }
 })

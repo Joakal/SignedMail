@@ -2,9 +2,6 @@ import { MutationTree } from 'vuex';
 import { IKeyRecord, KeysStateInterface } from './state';
 
 const mutation: MutationTree<KeysStateInterface> = {
-  updateCurrent(state, key: string) {
-    state.currentKey = key
-  },
   addPublicKey(state, keyRecord: IKeyRecord) {
     state.publicKeys.push(keyRecord);
   },
@@ -34,7 +31,10 @@ const mutation: MutationTree<KeysStateInterface> = {
   },
   changeDefaultVerifying(state, keyID: string) {
     state.defaults.verifyingKeyID = keyID;
-  }
+  },
+  changeDefaultDisplay(state, keyID: string) {
+    state.defaults.displayKeyID = keyID;
+  },
 };
 
 export default mutation;
