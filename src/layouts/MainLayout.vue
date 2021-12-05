@@ -103,6 +103,8 @@ import { defineComponent, defineAsyncComponent, ref } from 'vue'
 import { useStore } from 'vuex';
 import { storeKey } from 'src/store';
 import { localStorageStore } from 'src/store/plugins';
+import { URL_KEY } from 'src/util/constants';
+import { useRouter } from 'vue-router'
 
 export default defineComponent({
   name: 'MainLayout',
@@ -113,6 +115,8 @@ export default defineComponent({
   },
 
   setup () {
+    const router = useRouter()
+    // const route = useRoute()
     const leftDrawerOpen = ref(false)
 
     const store = useStore(storeKey)
@@ -120,6 +124,14 @@ export default defineComponent({
 
     if (oldState) {
       store.commit('initialiseStore', oldState);
+    }
+
+    const urlRedirect = window.localStorage.getItem(URL_KEY);
+
+    if (urlRedirect) {
+      console.log("We're redirecting with", urlRedirect)
+      window.localStorage.removeItem(URL_KEY);
+      void router.push({ path: JSON.parse(urlRedirect) as string }) // -> /user/123
     }
 
     return {

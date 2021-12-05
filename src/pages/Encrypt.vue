@@ -23,6 +23,7 @@
       <div class="fit col justify-center q-pa-sm q-gutter-md">
         <div class="row q-gutter-md">
           <q-btn color="primary" label="Encrypt" @click="handleEncrypt" :disable="!publicKey?.key" />
+          <q-btn @click="attemptShrink" />
         </div>
         <div class="row">
           <q-expansion-item
@@ -104,6 +105,7 @@ import { useStore } from 'vuex';
 import { storeKey } from 'src/store';
 import {encryptMessage} from 'src/util/encryption';
 import { addToClipboard } from 'src/util/clipboard'
+import { compress, decompress } from 'lz-string';
 
 export default defineComponent({
   name: 'Encrypt',
@@ -127,6 +129,15 @@ export default defineComponent({
         });
       }
     };
+
+    const attemptShrink = () => {
+      const string = 'This is my compression test.';
+      console.log('Size of sample is: ', string.length);
+      const compressed = compress(string);
+      console.log('Size of compressed sample is: ', compressed.length);
+      const output = decompress(compressed);
+      console.log('Sample is: ', output);
+    }
 
     const publicKeyOptions = ref(publicKeys);
     const privateKeyOptions = ref(privateKeys);
@@ -176,7 +187,8 @@ export default defineComponent({
       handleEncrypt, 
       addToClipboard,
       publicKeyFilterFn,
-      privateKeyFilterFn
+      privateKeyFilterFn,
+      attemptShrink
     }
   }
 });
