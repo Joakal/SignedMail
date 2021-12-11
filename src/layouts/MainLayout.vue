@@ -116,7 +116,6 @@ export default defineComponent({
 
   setup () {
     const router = useRouter()
-    // const route = useRoute()
     const leftDrawerOpen = ref(false)
 
     const store = useStore(storeKey)
@@ -129,13 +128,14 @@ export default defineComponent({
     const urlRedirect = window.localStorage.getItem(URL_KEY);
 
     if (urlRedirect) {
-      console.log("We're redirecting with", urlRedirect)
       window.localStorage.removeItem(URL_KEY);
       void router.push({ path: JSON.parse(urlRedirect) as string }) // -> /user/123
     }
 
+    const essentialLinks = linksList.map(item => ({...item, link: `${router.options.history.base}${item.link}`}))
+    
     return {
-      essentialLinks: linksList,
+      essentialLinks,
       leftDrawerOpen,
       toggleLeftDrawer () {
         leftDrawerOpen.value = !leftDrawerOpen.value

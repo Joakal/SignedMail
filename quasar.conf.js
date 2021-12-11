@@ -53,7 +53,7 @@ module.exports = configure(function (ctx) {
 
     // Full list of options: https://v2.quasar.dev/quasar-cli/quasar-conf-js#Property%3A-build
     build: {
-      vueRouterMode: 'history', // available values: 'hash', 'history'
+      vueRouterMode: process.env.NODE_ENV === 'production' ? 'hash' : 'history', // available values: 'hash', 'history'
 
       publicPath: process.env.NODE_ENV === 'production' ? '/SignedMail/' : '/',
       // transpile: false,
