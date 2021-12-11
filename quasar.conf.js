@@ -55,6 +55,7 @@ module.exports = configure(function (ctx) {
     build: {
       vueRouterMode: 'history', // available values: 'hash', 'history'
 
+      publicPath: process.env.NODE_ENV === 'production' ? '/SignedMail/' : '/',
       // transpile: false,
 
       // Add dependencies for transpiling with Babel (Array of string/regex)
