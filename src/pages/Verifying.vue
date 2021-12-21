@@ -5,7 +5,7 @@
     </div>
     <q-form @submit="handleVerifying" >
       <div class="fit col">
-        <q-input v-model="input" filled type="textarea" :rules="[val => !!val || 'Field is required']" label="Message" :disable="!publicKey?.key">
+        <q-input v-model="input" filled type="textarea" :rules="[val => !!val || 'Field is required']" label="Message" :disable="!publicKeySelected?.key">
           <template v-slot:append>
             <q-icon
               name="content_copy"
@@ -26,7 +26,7 @@
       </div>
       <div class="fit col justify-center q-pa-sm q-gutter-md">
         <div class="row q-gutter-md">
-          <q-btn color="primary" label="Verify" @click="handleVerifying" :disable="!publicKey?.key" />
+          <q-btn color="primary" label="Verify" @click="handleVerifying" :disable="!publicKeySelected?.key" />
         </div>
         <div class="row">
           <q-expansion-item
@@ -34,7 +34,7 @@
             expand-separator
             icon="perm_identity"
             label="Settings"
-            :caption="publicKey?.userID ? publicKey.userID : 'Please add a public key'"
+            :caption="publicKeySelected?.userID ? publicKeySelected.userID : 'Please add a public key'"
           >
             <div class="row q-pa-sm q-gutter-md">
               <q-select
@@ -48,7 +48,7 @@
                 option-value="keyID"
                 option-label="userID"
                 @filter="publicKeyFilterFn"
-                v-model="publicKey"
+                v-model="publicKeySelected"
               >
                 <template v-slot:no-option>
                   <q-item>
@@ -67,7 +67,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed, watch } from 'vue';
+import { defineComponent, ref, computed } from 'vue';
 import { useQuasar } from 'quasar'
 import { useStore } from 'vuex';
 import { storeKey } from 'src/store';
@@ -75,20 +75,25 @@ import {verifyMessage} from 'src/util/encryption';
 import { addToClipboard } from 'src/util/clipboard'
 
 export default defineComponent({
-  name: 'Encrypt',
+  name: 'Verifying',
   setup() {
     const $q = useQuasar()
     const store = useStore(storeKey);
-    const {publicKeys, defaults: {verifyingKeyID}} = store.state.keys;
     const isPwd = ref(false);
     const input = ref('')
     const detachedSignature = ref('')
-    const publicKeyID = ref(verifyingKeyID);
+    const publicKeyOptions = ref(store.state.keys.publicKeys);
 
+    const publicKeys = computed(() => store.state.keys.publicKeys);
+    const publicKeySelected = computed({
+      get: () => store.state.keys.publicKeys.find(key => key.keyID === store.state.keys.defaults.verifyingKeyID),
+      set: val => store.commit('keys/changeDefaultVerifying', val?.keyID)
+    })
+    
     const handleVerifying = async () => {
-      if (publicKey.value) {
+      if (publicKeySelected.value) {
         try {
-          await verifyMessage(input.value, publicKey.value.key, detachedSignature.value)
+          await verifyMessage(input.value, publicKeySelected.value.key, detachedSignature.value)
           $q.notify({
             type: 'positive',
             message: 'This has been signed',
@@ -106,33 +111,25 @@ export default defineComponent({
         });
       }
     };
-
-    const publicKeyOptions = ref(publicKeys);
     
     const publicKeyFilterFn = (inputValue: string, doneFn: (callBackFn: () => void) => void) => {
       if (inputValue === '') {
         doneFn(() => {
-          publicKeyOptions.value = publicKeys
+          publicKeyOptions.value = publicKeys.value
         })
         return
       }
       doneFn(() => {
         const needle = inputValue.toLowerCase()
-        publicKeyOptions.value = publicKeys.filter(v => v.userID.toLowerCase().indexOf(needle) > -1)
+        publicKeyOptions.value = publicKeys.value.filter(v => v.userID.toLowerCase().indexOf(needle) > -1)
       })
     };
-
-    const publicKey = computed(() => publicKeys.find(key => key.keyID === publicKeyID.value))
-
-    watch(publicKeyID, (currentValue) => {      
-      store.commit('keys/changeDefaultVerifying', currentValue)
-    });
 
     return { 
       isPwd, 
       input, 
       detachedSignature, 
-      publicKeyID,
+      publicKeySelected,
       publicKeyOptions,
       handleVerifying, 
       addToClipboard,

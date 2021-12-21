@@ -5,7 +5,7 @@
     </div>
     <q-form @submit="handleEncrypt" >
       <div class="fit col">
-        <q-input v-model="input" filled :type="isPwd ? 'password' : 'textarea'" label="Input" :disable="!publicKey?.key">
+        <q-input v-model="input" filled :type="isPwd ? 'password' : 'textarea'" label="Input" :disable="!publicKeySelected?.key">
           <template v-slot:append>
             <q-icon
               name="content_copy"
@@ -22,7 +22,7 @@
       </div>
       <div class="fit col justify-center q-pa-sm q-gutter-md">
         <div class="row q-gutter-md">
-          <q-btn color="primary" label="Encrypt" @click="handleEncrypt" :disable="!publicKey?.key" />
+          <q-btn color="primary" label="Encrypt" @click="handleEncrypt" :disable="!publicKeySelected?.key" />
         </div>
         <div class="row">
           <q-expansion-item
@@ -30,7 +30,7 @@
             expand-separator
             icon="perm_identity"
             label="Settings"
-            :caption="publicKey?.userID ? publicKey.userID : 'Please add a public key'"
+            :caption="publicKeySelected?.userID ? publicKeySelected.userID : 'Please add a public key'"
           >
             <div class="row q-pa-sm q-gutter-md">
               <q-select
@@ -44,7 +44,7 @@
                 option-value="keyID"
                 option-label="userID"
                 @filter="publicKeyFilterFn"
-                v-model="publicKeyID"
+                v-model="publicKeySelected"
               >
                 <template v-slot:no-option>
                   <q-item>
@@ -68,7 +68,7 @@
                 option-value="keyID"
                 option-label="userID"
                 @filter="privateKeyFilterFn"
-                v-model="privateKeyID"
+                v-model="privateKeySelected"
               >
                 <template v-slot:no-option>
                   <q-item>
@@ -98,7 +98,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed, watch } from 'vue';
+import { defineComponent, ref, computed } from 'vue';
 import { useQuasar } from 'quasar'
 import { useStore } from 'vuex';
 import { storeKey } from 'src/store';
@@ -110,16 +110,27 @@ export default defineComponent({
   setup() {
     const $q = useQuasar()
     const store = useStore(storeKey);
-    const {publicKeys, privateKeys, defaults: {encrypt}} = store.state.keys;
     const isPwd = ref(false);
     const input = ref('')
     const output = ref('')
-    const publicKeyID = ref(encrypt.publicKeyID);
-    const privateKeyID = ref(encrypt.privateKeyID);
+    const publicKeyOptions = ref(store.state.keys.publicKeys);
+    const privateKeyOptions = ref(store.state.keys.privateKeys);
+
+    const publicKeys = computed(() => store.state.keys.publicKeys);
+    const privateKeys = computed(() => store.state.keys.privateKeys);
+
+    const publicKeySelected = computed({
+      get: () => store.state.keys.publicKeys.find(key => key.keyID === store.state.keys.defaults.encrypt.publicKeyID),
+      set: val => store.commit('keys/changeDefaultEncryptPublicKey', val?.keyID)
+    })
+    const privateKeySelected = computed({
+      get: () => store.state.keys.privateKeys.find(key => key.keyID === store.state.keys.defaults.encrypt.privateKeyID),
+      set: val => store.commit('keys/changeDefaultEncryptPrivateKey', val?.keyID)
+    })
 
     const handleEncrypt = async () => {
-      if (publicKey.value) {
-        output.value = await encryptMessage(input.value, publicKey.value.key, privateKey.value?.key)
+      if (publicKeySelected.value) {
+        output.value = await encryptMessage(input.value, publicKeySelected.value.key, privateKeySelected.value?.key)
       } else {
         $q.notify({
           type: 'negative',
@@ -127,56 +138,40 @@ export default defineComponent({
         });
       }
     };
-
-    const publicKeyOptions = ref(publicKeys);
-    const privateKeyOptions = ref(privateKeys);
     
     const publicKeyFilterFn = (inputValue: string, doneFn: (callBackFn: () => void) => void) => {
       if (inputValue === '') {
         doneFn(() => {
-          publicKeyOptions.value = publicKeys
+          publicKeyOptions.value = publicKeys.value
         })
         return
       }
       doneFn(() => {
         const needle = inputValue.toLowerCase()
-        publicKeyOptions.value = publicKeys.filter(v => v.userID.toLowerCase().indexOf(needle) > -1)
+        publicKeyOptions.value = publicKeys.value.filter(v => v.userID.toLowerCase().indexOf(needle) > -1)
       })
     };
     
     const privateKeyFilterFn = (inputValue: string, doneFn: (callBackFn: () => void) => void) => {
       if (inputValue === '') {
         doneFn(() => {
-          privateKeyOptions.value = privateKeys
+          privateKeyOptions.value = privateKeys.value
         })
         return
       }
       doneFn(() => {
         const needle = inputValue.toLowerCase()
-        privateKeyOptions.value = privateKeys.filter(v => v.userID.toLowerCase().indexOf(needle) > -1)
+        privateKeyOptions.value = privateKeys.value.filter(v => v.userID.toLowerCase().indexOf(needle) > -1)
       })
     };
-
-    const publicKey = computed(() => publicKeys.find(key => key.keyID === publicKeyID.value))
-    const privateKey = computed(() => privateKeys.find(key => key.keyID === privateKeyID.value))
-
-    watch(publicKeyID, (currentValue) => {
-      store.commit('keys/changeDefaultEncryptPublicKey', currentValue)
-    });
-
-    watch(privateKeyID, (currentValue) => {
-      store.commit('keys/changeDefaultEncryptPrivateKey', currentValue)
-    });
 
     return { 
       isPwd, 
       input, 
-      output, 
-      publicKeyID,
-      publicKey,
+      output,
+      publicKeySelected,
       publicKeyOptions,
-      privateKeyID,
-      privateKey,
+      privateKeySelected,
       privateKeyOptions,
       handleEncrypt, 
       addToClipboard,

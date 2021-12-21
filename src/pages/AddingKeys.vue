@@ -1,7 +1,7 @@
 <template>
   <div class="q-pa-md row justify-evenly fit">
     <div>
-      <NewKey @newKeys="displayKeys" />
+      <NewKey @newKeys="(newData) => showKeys = newData" />
     </div>
   </div>
   <div class="q-pa-md row" v-if="showKeys">
@@ -35,10 +35,6 @@ export default defineComponent({
     const publicKeyExists = (key: Key) => publicKeys.value.find(publicKey => publicKey.keyID === key.getKeyID().toHex())
     const privateKeyExists = (key: Key) => privateKeys.value.find(privateKey => privateKey.keyID === key.getKeyID().toHex())
 
-    const displayKeys = (keys: CombinedKeyPair) => {
-      showKeys.value = keys;
-    }
-
     const handleAddKey = async (key: string) => {
       try {
         const keyValue = await readImportedKey(key)
@@ -51,8 +47,7 @@ export default defineComponent({
           await store.dispatch('keys/importPublicKey', keyValue);
         }
         
-        const keys = { publicKey: keyValue };
-        displayKeys(keys);
+        showKeys.value = { publicKey: keyValue };
       } catch (error: unknown) {
         const {message} = error as Error;
         $q.notify({
@@ -70,7 +65,6 @@ export default defineComponent({
 
     return { 
       showKeys,
-      displayKeys,
     };
   }
 })

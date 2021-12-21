@@ -5,7 +5,7 @@
     </div>
     <q-form @submit="handleDecrypt" >
       <div class="fit col">
-        <q-input v-model="input" filled label="Input" type="textarea" :disable="!privateKey?.key">
+        <q-input v-model="input" filled label="Input" type="textarea" :disable="!privateKeySelected?.key">
           <template v-slot:append>
             <q-icon
               name="content_copy"
@@ -17,7 +17,7 @@
       </div>
       <div class="fit col justify-center q-pa-sm q-gutter-md">
         <div class="row q-gutter-md">
-          <q-btn color="primary" label="Decrypt" @click="handleDecrypt" :disable="!privateKey?.key" />
+          <q-btn color="primary" label="Decrypt" @click="handleDecrypt" :disable="!privateKeySelected?.key" />
         </div>
         <div class="row">
           <q-expansion-item
@@ -25,7 +25,7 @@
             expand-separator
             icon="perm_identity"
             label="Settings"
-            :caption="privateKey?.userID ? privateKey.userID : 'Please add a private key'"
+            :caption="privateKeySelected?.userID ? privateKeySelected.userID : 'Please add a private key'"
           >
             <div class="row q-pa-sm q-gutter-md">
               <q-select
@@ -40,7 +40,7 @@
                 option-value="keyID"
                 option-label="userID"
                 @filter="privateKeyFilterFn"
-                v-model="privateKeyID"
+                v-model="privateKeySelected"
               >
                 <template v-slot:no-option>
                   <q-item>
@@ -64,7 +64,7 @@
                 option-value="keyID"
                 option-label="userID"
                 @filter="publicKeyFilterFn"
-                v-model="publicKeyID"
+                v-model="publicKeySelected"
               >
                 <template v-slot:no-option>
                   <q-item>
@@ -99,7 +99,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed, watch } from 'vue';
+import { defineComponent, ref, computed } from 'vue';
 import { useQuasar } from 'quasar'
 import { useStore } from 'vuex';
 import { storeKey } from 'src/store';
@@ -111,29 +111,35 @@ export default defineComponent({
   setup() {
     const $q = useQuasar()
     const store = useStore(storeKey);
-    const {publicKeys, privateKeys, defaults: {decrypt}} = store.state.keys;
     const isPwd = ref(false);
     const input = ref('');
     const decryptedBody = ref<IDecryptionResult>({ decrypted: '', verified: false });
-    const publicKeyOptions = ref(publicKeys);
-    const privateKeyOptions = ref(privateKeys);
-    const publicKeyID = ref(decrypt.publicKeyID);
-    const privateKeyID = ref(decrypt.privateKeyID);
+    const publicKeyOptions = ref(store.state.keys.publicKeys);
+    const privateKeyOptions = ref(store.state.keys.privateKeys);
+    
     const output = computed(() => decryptedBody.value.decrypted);
+    const publicKeys = computed(() => store.state.keys.publicKeys);
+    const privateKeys = computed(() => store.state.keys.privateKeys);
+
+    const publicKeySelected = computed({
+      get: () => store.state.keys.publicKeys.find(key => key.keyID === store.state.keys.defaults.decrypt.publicKeyID),
+      set: val => store.commit('keys/changeDefaultDecryptPublicKey', val?.keyID)
+    })
+    const privateKeySelected = computed({
+      get: () => store.state.keys.privateKeys.find(key => key.keyID === store.state.keys.defaults.decrypt.privateKeyID),
+      set: val => store.commit('keys/changeDefaultDecryptPrivateKey', val?.keyID)
+    })
 
     const handleDecrypt = async () => {
-      if (privateKey.value) {
+      if (privateKeySelected.value) {
         try {
-          decryptedBody.value = await decryptMessage(input.value, privateKey.value.key, publicKey.value?.key)
-          console.log('Handling decrypt', decryptedBody)
+          decryptedBody.value = await decryptMessage(input.value, privateKeySelected.value.key, publicKeySelected.value?.key);
         } catch ({message}) {
           $q.notify({
             type: 'negative',
             message: message as string,
           });
         }
-
-        console.log('HMM', decryptedBody.value);
       } else {
         $q.notify({
           type: 'negative',
@@ -143,50 +149,38 @@ export default defineComponent({
     };
     
     const publicKeyFilterFn = (inputValue: string, doneFn: (callBackFn: () => void) => void) => {
-      console.log('INPUTVALUE', inputValue)
       if (inputValue === '') {
         doneFn(() => {
-          publicKeyOptions.value = publicKeys
+          publicKeyOptions.value = publicKeys.value
         })
         return
       }
       doneFn(() => {
         const needle = inputValue.toLowerCase()
-        publicKeyOptions.value = publicKeys.filter(v => v.userID.toLowerCase().indexOf(needle) > -1)
+        publicKeyOptions.value = publicKeys.value.filter(v => v.userID.toLowerCase().indexOf(needle) > -1)
       })
     };
     
     const privateKeyFilterFn = (inputValue: string, doneFn: (callBackFn: () => void) => void) => {
       if (inputValue === '') {
         doneFn(() => {
-          privateKeyOptions.value = privateKeys
+          privateKeyOptions.value = privateKeys.value
         })
         return
       }
       doneFn(() => {
         const needle = inputValue.toLowerCase()
-        privateKeyOptions.value = privateKeys.filter(v => v.userID.toLowerCase().indexOf(needle) > -1)
+        privateKeyOptions.value = privateKeys.value.filter(v => v.userID.toLowerCase().indexOf(needle) > -1)
       })
     };
-
-    const publicKey = computed(() => publicKeys.find(key => key.keyID === publicKeyID.value))
-    const privateKey = computed(() => privateKeys.find(key => key.keyID === privateKeyID.value))
-
-    watch(publicKeyID, (currentValue) => {
-      store.commit('keys/changeDefaultDecryptPublicKey', currentValue)
-    });
-
-    watch(privateKeyID, (currentValue) => {
-      store.commit('keys/changeDefaultDecryptPrivateKey', currentValue)
-    });
 
     return { 
       isPwd, 
       input, 
       output, 
-      publicKey,
+      publicKeySelected,
       publicKeyOptions,
-      privateKey,
+      privateKeySelected,
       privateKeyOptions,
       handleDecrypt, 
       addToClipboard,

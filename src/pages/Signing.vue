@@ -5,7 +5,7 @@
     </div>
     <q-form @submit="handleSigning" >
       <div class="fit col">
-        <q-input v-model="input" filled type="textarea" label="Input" :disable="!privateKey?.key">
+        <q-input v-model="input" filled type="textarea" label="Input" :disable="!privateKeySelected?.key">
           <template v-slot:append>
             <q-icon
               name="content_copy"
@@ -17,7 +17,7 @@
       </div>
       <div class="fit col justify-center q-pa-sm q-gutter-md">
         <div class="row q-gutter-md">
-          <q-btn color="primary" label="Sign" @click="handleSigning" :disable="!privateKey?.key" />
+          <q-btn color="primary" label="Sign" @click="handleSigning" :disable="!privateKeySelected?.key" />
         </div>
         <div class="row">
           <q-expansion-item
@@ -25,7 +25,7 @@
             expand-separator
             icon="perm_identity"
             label="Settings"
-            :caption="privateKey?.userID ? privateKey.userID : 'Please add a private key'"
+            :caption="privateKeySelected?.userID ? privateKeySelected.userID : 'Please add a private key'"
           >
             <div class="row q-pa-sm q-gutter-md">
               <q-select
@@ -39,7 +39,7 @@
                 option-value="keyID"
                 option-label="userID"
                 @filter="privateKeyFilterFn"
-                v-model="privateKey"
+                v-model="privateKeySelected"
               >
                 <template v-slot:no-option>
                   <q-item>
@@ -69,7 +69,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed, watch } from 'vue';
+import { defineComponent, ref, computed } from 'vue';
 import { useQuasar } from 'quasar'
 import { useStore } from 'vuex';
 import { storeKey } from 'src/store';
@@ -77,19 +77,25 @@ import {signMessage} from 'src/util/encryption';
 import { addToClipboard } from 'src/util/clipboard'
 
 export default defineComponent({
-  name: 'Encrypt',
+  name: 'Signing',
   setup() {
     const $q = useQuasar()
     const store = useStore(storeKey);
-    const {privateKeys, defaults: {signingKeyID}} = store.state.keys;
     const isPwd = ref(false);
     const input = ref('')
     const output = ref('')
-    const privateKeyID = ref(signingKeyID);
+    const privateKeyOptions = ref(store.state.keys.privateKeys);
+
+    const privateKeys = computed(() => store.state.keys.privateKeys);
+
+    const privateKeySelected = computed({
+      get: () => store.state.keys.privateKeys.find(key => key.keyID === store.state.keys.defaults.signingKeyID),
+      set: val => store.commit('keys/changeDefaultSigning', val?.keyID)
+    })
 
     const handleSigning = async () => {
-      if (privateKey.value?.key) {
-        const signature = await signMessage(input.value, privateKey.value.key)
+      if (privateKeySelected.value?.key) {
+        const signature = await signMessage(input.value, privateKeySelected.value.key)
         const combined = `${input.value}\n\n${signature}`
 
         output.value = combined;
@@ -100,33 +106,25 @@ export default defineComponent({
         });
       }
     };
-
-    const privateKeyOptions = ref(privateKeys);
     
     const privateKeyFilterFn = (inputValue: string, doneFn: (callBackFn: () => void) => void) => {
       if (inputValue === '') {
         doneFn(() => {
-          privateKeyOptions.value = privateKeys
+          privateKeyOptions.value = privateKeys.value
         })
         return
       }
       doneFn(() => {
         const needle = inputValue.toLowerCase()
-        privateKeyOptions.value = privateKeys.filter(v => v.userID.toLowerCase().indexOf(needle) > -1)
+        privateKeyOptions.value = privateKeys.value.filter(v => v.userID.toLowerCase().indexOf(needle) > -1)
       })
     };
-
-    const privateKey = computed(() => privateKeys.find(key => key.keyID === privateKeyID.value))
-
-    watch(privateKeyID, (currentValue) => {      
-      store.commit('keys/changeDefaultSigning', currentValue)
-    });
 
     return { 
       isPwd, 
       input, 
       output, 
-      privateKeyID,
+      privateKeySelected,
       privateKeyOptions,
       handleSigning, 
       addToClipboard,

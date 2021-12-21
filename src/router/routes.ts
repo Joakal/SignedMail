@@ -1,38 +1,5 @@
 import { RouteRecordRaw } from 'vue-router';
 
-// const checkKey = ( next: NavigationGuardNext) => {
-
-//   if (1 === 1) {
-//     console.log('checkKey next');
-//     next();
-//   } else{
-//     console.log('checkKey else');
-
-//   }
-//   // router.push({ 
-//   //   name: 'login',
-//   //   params: {
-//   //     returnTo: to.path,
-//   //     query: to.query,
-//   //   },
-//   // });
-//     // function checking(): void {
-//     //   // 'error' will be an object with an error code and message
-//     //   something.value = 'checking'
-//     //   // Fingerprint.isAvailable(isAvailableSuccess, isAvailableError, {allowBackup: true});
-//     //   Fingerprint.show({
-//     //   clientId: 'Fingerprint-Demo',
-//     //   clientSecret: 'password', //Only necessary for Android
-//     //   description: 'Some biometric description', disableBackup: false, allowBackup: true
-//     // }, successCallback, errorCallback)
-//     //   // Fingerprint.loadBiometricSecret({
-//     //   //     description: 'Some biometric description',
-//     //   //     disableBackup: true, // always disabled on Android
-//     //   //   }, successCallback, errorCallback);
-
-//     // }
-// }
-
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
