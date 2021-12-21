@@ -23,7 +23,6 @@ export const createTypeOptions = ['ecc', 'rsa']
 export const createCurveOptions = ['ed25519', 'curve25519', 'p256', 'p384', 'p521', 'secp256k1', 'brainpoolP256r1', 'brainpoolP384r1', 'brainpoolP512r1']
 
 export async function createKeys(name: string, email: string, passphrase: string, type: KeyOptions['type'] = 'ecc', curve: EllipticCurveName = 'curve25519', userIDs: UserID[] = []): Promise<CombinedKeyPair> {
-  console.log('name email, etc', name, email, passphrase)
   // advanced types, curves, format 
   return await generateKey({
       type, // Type of the key, defaults to ECC
@@ -43,7 +42,6 @@ async function requestPassphrase (): Promise<string | undefined> {
       type: 'text'
     },
     cancel: true  }).onOk((data: string)=>{
-      console.log('onOk data', data)
       return resolve(data)
     }).onCancel(()=>resolve(undefined)));
 }
@@ -51,9 +49,7 @@ async function requestPassphrase (): Promise<string | undefined> {
 export const readImportedKey = (armoredKey: string) => readKey({armoredKey})
 
 export async function encryptMessage(body: string, publicKey: string, privateKey?: string): Promise<string> {
-  console.log('Signature is encryptMessage', publicKey);
   const resolvedPublicKey = await readKey({ armoredKey: publicKey });
-  console.log('Signature is encryptMessage');
   const message = await createMessage({ text: body });
   const encryptBody = {
     message,
@@ -66,7 +62,6 @@ export async function encryptMessage(body: string, publicKey: string, privateKey
     if (passphrase === null) {
       return ''; 
     }
-    console.log('passphrase', passphrase);
     
     const resolvedPrivateKey = await readPrivateKey({ armoredKey: privateKey });
     const decryptedPrivateKey = await decryptKey({
@@ -76,17 +71,12 @@ export async function encryptMessage(body: string, publicKey: string, privateKey
 
     encryptBody.signingKeys = decryptedPrivateKey
   }
-  console.log('encryptBody', encryptBody);
 
   return await encrypt(encryptBody) as string;
 }
 
 export async function decryptMessage(encryptedBody: string, privateKey: string, publicKey?: string): Promise<IDecryptionResult> {
-  console.log('decryptMessage');
   const resolvedPrivateKey = await readPrivateKey({ armoredKey: privateKey });
-  console.log('resolvedPrivateKey', resolvedPrivateKey);
-  console.log('resolvedPrivateKey getKeyID', resolvedPrivateKey.getKeyID().toHex())
-  console.log('resolvedPrivateKey getKeyIDs', resolvedPrivateKey.getKeyIDs().map(key => key.toHex()))
 
   const passphrase = await requestPassphrase();
   const decryptedPrivateKey = await decryptKey({
@@ -94,13 +84,9 @@ export async function decryptMessage(encryptedBody: string, privateKey: string, 
     passphrase
   });
 
-    console.log('encryptedBody', encryptedBody);
   const message = await readMessage({
       armoredMessage: encryptedBody // parse armored message
   });
-  console.log('message', message);
-  console.log('message getEncryptionKeyIDs', message.getEncryptionKeyIDs().map(key => key.toHex()))
-  console.log('message getSigningKeyIDs', message.getSigningKeyIDs().map(key => key.toHex()))
 
   const decryptBody = {
     message,
@@ -109,14 +95,12 @@ export async function decryptMessage(encryptedBody: string, privateKey: string, 
 
   if (publicKey) {
     const resolvedPublicKey = await readKey({ armoredKey: publicKey });
-    console.log('resolvedPublicKey', resolvedPublicKey);
 
     decryptBody.expectSigned = true;
     decryptBody.verificationKeys = resolvedPublicKey;
   }
 
   const { data: decrypted, signatures} = await decrypt(decryptBody)
-  console.log('decrypted', decrypted);
 
   let verified = undefined;
 
@@ -138,13 +122,11 @@ export async function signMessage(body: string, privateKey: string): Promise<str
   });
 
   const message = await createMessage({ text: body });
-  console.log('Signature is signMessage');
   const cleartextMessage  = await sign({
     message,
     signingKeys: decryptedPrivateKey,
     detached: true
   });
-  console.log('cleartextMessage', cleartextMessage)
 
   return cleartextMessage;
 }
@@ -165,10 +147,8 @@ export async function verifyMessage(body: string, publicKey: string, detachedSig
   } 
 
   const verificationResult = await verify(verifyBody);
-  console.log('verify done');
-  const { verified, keyID } = verificationResult.signatures[0];
+  const { verified } = verificationResult.signatures[0];
   await verified; // throws on invalid signature
-  console.log('Signed by key id ' + keyID.toHex());
 
   return true;
 }
@@ -191,7 +171,6 @@ export async function getUserIDs(key: string) {
 }
 
 export async function testEncrypt(): Promise<string> {
-  console.log('Starting TestEncrypt')
   // put keys in backtick (``) to avoid errors caused by spaces or tabs
   const publicKey = `-----BEGIN PGP PUBLIC KEY BLOCK-----
 
