@@ -59,7 +59,6 @@ export default defineComponent({
     const publicKeyOptions = ref(store.state.keys.publicKeys);
     
     const publicKeyFilterFn = (inputValue: string, doneFn: (callBackFn: () => void) => void) => {
-      console.log('What are the public keys', store.state.keys.publicKeys);
       if (inputValue === '') {
         doneFn(() => {
           publicKeyOptions.value = publicKeys.value

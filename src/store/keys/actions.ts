@@ -35,12 +35,10 @@ const actions: ActionTree<KeysStateInterface, StateInterface> = {
   },
   async importPublicKey (store, key: Key) {
     const publicRecord = await formatForTable('public', key.armor());
-    console.log('adding to the list', publicRecord)
     store.commit('addPublicKey', publicRecord);
   },
   async importPrivateKey (store, key: Key) {
     const privateRecord = await formatForTable('public', key.armor());
-    console.log('adding to the list', privateRecord)
     store.commit('addPrivateKey', privateRecord);
   },
   removeKeys (store, keys: CombinedKeyPair) {
