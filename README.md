@@ -21,3 +21,8 @@ yarn run lint
 ```bash
 quasar build
 ```
+
+
+### Fun headaches
+
+Don't use key as a variable. It's a reserved word.

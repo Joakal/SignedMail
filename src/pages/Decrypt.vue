@@ -37,10 +37,10 @@
                 clearable
                 :options="privateKeyOptions"
                 hint="Private Key to decrypt"
-                option-value="key"
+                option-value="keyID"
                 option-label="userID"
                 @filter="privateKeyFilterFn"
-                v-model="privateKey"
+                v-model="privateKeyID"
               >
                 <template v-slot:no-option>
                   <q-item>
@@ -61,10 +61,10 @@
                 clearable
                 :options="publicKeyOptions"
                 hint="Public Key to verify signature"
-                option-value="key"
+                option-value="keyID"
                 option-label="userID"
                 @filter="publicKeyFilterFn"
-                v-model="publicKey"
+                v-model="publicKeyID"
               >
                 <template v-slot:no-option>
                   <q-item>
@@ -111,20 +111,20 @@ export default defineComponent({
   setup() {
     const $q = useQuasar()
     const store = useStore(storeKey);
-    const {publicKeys, privateKeys, defaults: {decrypt: {privateKeyID, publicKeyID}}} = store.state.keys;
+    const {publicKeys, privateKeys, defaults: {decrypt}} = store.state.keys;
     const isPwd = ref(false);
     const input = ref('');
-    const publicKey = ref(publicKeys.find(key => key.keyID === publicKeyID));
-    const privateKey = ref(privateKeys.find(key => key.keyID === privateKeyID));
     const decryptedBody = ref<IDecryptionResult>({ decrypted: '', verified: false });
     const publicKeyOptions = ref(publicKeys);
     const privateKeyOptions = ref(privateKeys);
+    const publicKeyID = ref(decrypt.publicKeyID);
+    const privateKeyID = ref(decrypt.privateKeyID);
     const output = computed(() => decryptedBody.value.decrypted);
 
     const handleDecrypt = async () => {
       if (privateKey.value) {
         try {
-          decryptedBody.value = await decryptMessage(input.value, privateKey.value, publicKey.value)
+          decryptedBody.value = await decryptMessage(input.value, privateKey.value.key, publicKey.value?.key)
           console.log('Handling decrypt', decryptedBody)
         } catch ({message}) {
           $q.notify({
@@ -169,12 +169,15 @@ export default defineComponent({
       })
     };
 
-    watch(publicKey, (currentValue) => {
-      store.commit('keys/changeDefaultDecryptPublicKey', currentValue?.keyID)
+    const publicKey = computed(() => publicKeys.find(key => key.keyID === publicKeyID.value))
+    const privateKey = computed(() => privateKeys.find(key => key.keyID === privateKeyID.value))
+
+    watch(publicKeyID, (currentValue) => {
+      store.commit('keys/changeDefaultDecryptPublicKey', currentValue)
     });
 
-    watch(privateKey, (currentValue) => {      
-      store.commit('keys/changeDefaultDecryptPrivateKey', currentValue?.keyID)
+    watch(privateKeyID, (currentValue) => {
+      store.commit('keys/changeDefaultDecryptPrivateKey', currentValue)
     });
 
     return { 

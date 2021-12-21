@@ -45,7 +45,7 @@
                 input-debounce="0"
                 :options="publicKeyOptions"
                 hint="Public Key"
-                option-value="key"
+                option-value="keyID"
                 option-label="userID"
                 @filter="publicKeyFilterFn"
                 v-model="publicKey"
@@ -67,7 +67,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, watch } from 'vue';
+import { defineComponent, ref, computed, watch } from 'vue';
 import { useQuasar } from 'quasar'
 import { useStore } from 'vuex';
 import { storeKey } from 'src/store';
@@ -83,12 +83,12 @@ export default defineComponent({
     const isPwd = ref(false);
     const input = ref('')
     const detachedSignature = ref('')
-    const publicKey = ref(publicKeys.find(key => key.keyID === verifyingKeyID));
+    const publicKeyID = ref(verifyingKeyID);
 
     const handleVerifying = async () => {
       if (publicKey.value) {
         try {
-          await verifyMessage(input.value, publicKey.value, detachedSignature.value)
+          await verifyMessage(input.value, publicKey.value.key, detachedSignature.value)
           $q.notify({
             type: 'positive',
             message: 'This has been signed',
@@ -122,15 +122,17 @@ export default defineComponent({
       })
     };
 
-    watch(publicKey, (currentValue) => {      
-      store.commit('keys/changeDefaultVerifying', currentValue?.keyID)
+    const publicKey = computed(() => publicKeys.find(key => key.keyID === publicKeyID.value))
+
+    watch(publicKeyID, (currentValue) => {      
+      store.commit('keys/changeDefaultVerifying', currentValue)
     });
 
     return { 
       isPwd, 
       input, 
       detachedSignature, 
-      publicKey,
+      publicKeyID,
       publicKeyOptions,
       handleVerifying, 
       addToClipboard,

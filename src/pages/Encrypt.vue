@@ -41,10 +41,10 @@
                 input-debounce="0"
                 :options="publicKeyOptions"
                 hint="Public Key"
-                option-value="key"
+                option-value="keyID"
                 option-label="userID"
                 @filter="publicKeyFilterFn"
-                v-model="publicKey"
+                v-model="publicKeyID"
               >
                 <template v-slot:no-option>
                   <q-item>
@@ -65,10 +65,10 @@
                 clearable
                 :options="privateKeyOptions"
                 hint="Private Key signing (optional)"
-                option-value="key"
+                option-value="keyID"
                 option-label="userID"
                 @filter="privateKeyFilterFn"
-                v-model="privateKey"
+                v-model="privateKeyID"
               >
                 <template v-slot:no-option>
                   <q-item>
@@ -98,7 +98,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, watch } from 'vue';
+import { defineComponent, ref, computed, watch } from 'vue';
 import { useQuasar } from 'quasar'
 import { useStore } from 'vuex';
 import { storeKey } from 'src/store';
@@ -110,16 +110,16 @@ export default defineComponent({
   setup() {
     const $q = useQuasar()
     const store = useStore(storeKey);
-    const {publicKeys, privateKeys, defaults: {encrypt: {privateKeyID, publicKeyID}}} = store.state.keys;
+    const {publicKeys, privateKeys, defaults: {encrypt}} = store.state.keys;
     const isPwd = ref(false);
     const input = ref('')
     const output = ref('')
-    const publicKey = ref(publicKeys.find(key => key.keyID === publicKeyID));
-    const privateKey = ref(privateKeys.find(key => key.keyID === privateKeyID));
+    const publicKeyID = ref(encrypt.publicKeyID);
+    const privateKeyID = ref(encrypt.privateKeyID);
 
     const handleEncrypt = async () => {
       if (publicKey.value) {
-        output.value = await encryptMessage(input.value, publicKey.value, privateKey.value)
+        output.value = await encryptMessage(input.value, publicKey.value.key, privateKey.value?.key)
       } else {
         $q.notify({
           type: 'negative',
@@ -157,20 +157,25 @@ export default defineComponent({
       })
     };
 
-    watch(publicKey, (currentValue) => {      
-      store.commit('keys/changeDefaultEncryptPublicKey', currentValue?.keyID)
+    const publicKey = computed(() => publicKeys.find(key => key.keyID === publicKeyID.value))
+    const privateKey = computed(() => privateKeys.find(key => key.keyID === privateKeyID.value))
+
+    watch(publicKeyID, (currentValue) => {
+      store.commit('keys/changeDefaultEncryptPublicKey', currentValue)
     });
 
-    watch(privateKey, (currentValue) => {      
-      store.commit('keys/changeDefaultEncryptPrivateKey', currentValue?.keyID)
+    watch(privateKeyID, (currentValue) => {
+      store.commit('keys/changeDefaultEncryptPrivateKey', currentValue)
     });
 
     return { 
       isPwd, 
       input, 
       output, 
+      publicKeyID,
       publicKey,
       publicKeyOptions,
+      privateKeyID,
       privateKey,
       privateKeyOptions,
       handleEncrypt, 

@@ -5,7 +5,7 @@
       :rows="keys"
       :columns="columns"
       :filter="filter"
-      row-key="key"
+      row-key="keyID"
     >
       <template v-slot:header="props">
         <q-tr :props="props">
@@ -48,16 +48,15 @@
             <q-btn icon="download" color="secondary" @click="exportFile(`${fileName}.pub`, props.row.key)">
               <q-tooltip>Download {{label}}</q-tooltip>
             </q-btn>
-            <q-btn icon="delete" color="negative" @click="confirmDeletion(props.row.key)">
+            <q-btn icon="delete" color="negative" @click="confirmDeletion(props.row.keyID)">
               <q-tooltip>Delete {{label}}</q-tooltip>
             </q-btn>
           </q-td>
         </q-tr>
-        <q-tr v-show="props.expand" :props="props">
-          <q-td>
-            <pre>{{props.row.key}}</pre>
+        <q-tr v-show="props.expand" :props="props" v-if="props.row.key">
+          <q-td colspan="2">
+            <show-key :keyValue="props.row.key" :label="label" keyDetail />
           </q-td>
-          <q-td auto-width />
         </q-tr>
       </template>
     </q-table>
@@ -68,6 +67,7 @@
 import { defineComponent, ref, toRef } from 'vue';
 import { QTable, useQuasar, exportFile } from 'quasar';
 import { addToClipboard } from 'src/util/clipboard'
+import ShowKey from './ShowKey.vue';
 
 const columns: QTable['columns'] = [{
   name: 'keyID',
@@ -86,6 +86,7 @@ const columns: QTable['columns'] = [{
 }];
 
 export default defineComponent({
+  components: { ShowKey },
   name: 'KeyTable',
   props: {
     title: {
@@ -102,18 +103,18 @@ export default defineComponent({
     }
   },
   emits: {
-    deleteKey: (payload: string): boolean => !!payload,
+    deleteKey: (keyID: string): boolean => !!keyID,
   },
   setup(props, {emit}) {
     const $q = useQuasar()
     
-    function confirmDeletion(key: string) {
+    function confirmDeletion(keyID: string) {
       $q.dialog({
         title: 'Confirm',
         message: 'Are you sure you want to delete this key?',
         cancel: true
       }).onOk(() => {
-        emit('deleteKey', key);
+        emit('deleteKey', keyID);
         $q.notify({type: 'positive', message: 'Key successfully deleted'});
       })
     }

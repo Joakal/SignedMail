@@ -17,7 +17,7 @@ export default defineComponent({
 
     return {
       rows: computed(() => store.state.keys.privateKeys),
-      removeKey: (key: string) => store.commit('keys/removePrivateKey', key)
+      removeKey: (keyID: string) => store.commit('keys/removePrivateKey', keyID)
     };
   }
 });

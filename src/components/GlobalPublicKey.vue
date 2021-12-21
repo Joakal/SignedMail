@@ -6,10 +6,10 @@
         <q-card-section>
           <q-input :model-value="publicKeyValue" filled readonly type="textarea" label="Public Key" />
           <div class="q-pa-sm q-gutter-sm">
-            <q-btn color="secondary" icon="content_copy" label="Clipboard" @click="addToClipboard({label: 'Public Key', value: publicKeyValue})" />
-            <q-btn color="secondary" icon="download" label="Download" @click="exportFile('PublicKey.crt', publicKeyValue)" />
-            <q-btn color="secondary" icon="qr_code_2" label="QR Code" @click="qrCode" />
-            <a href="https://www.mysite.com/whatever/path">Deeplink</a>
+            <q-btn color="secondary" icon="content_copy" label="Public Key" @click="addToClipboard({label: 'Public Key', value: publicKeyValue})" :disable="!publicKeySelected" />
+            <q-btn color="secondary" icon="offline_share" label="SignedMail Link" @click="addToClipboard({label: 'Public Key', value: fullUrl})" :disable="!publicKeySelected" />
+            <q-btn color="secondary" icon="download" label="Download" @click="exportFile('PublicKey.crt', publicKeyValue)" :disable="!publicKeySelected" />
+            <q-btn color="secondary" icon="qr_code_2" label="QR Code" @click="qrCode" :disable="!publicKeySelected" />
           </div>
           <canvas id="qr-code-public-key"></canvas>
           <q-select
@@ -21,10 +21,10 @@
             clearable
             :options="publicKeyOptions"
             hint="Public Key to share"
-            option-value="key"
+            option-value="keyID"
             option-label="userID"
             @filter="publicKeyFilterFn"
-            v-model="publicKey"
+            v-model="publicKeySelected"
           >
             <template v-slot:no-option>
               <q-item>
@@ -41,12 +41,13 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed, watch } from 'vue'
+import { defineComponent, ref, computed} from 'vue'
 import { useStore } from 'vuex';
 import { storeKey } from 'src/store'
 import { exportFile } from 'quasar'
 import { addToClipboard } from 'src/util/clipboard'
 import QRCode from 'qrcode'
+import { DOMAIN_URL } from 'src/util/constants';
 
 export default defineComponent({
   props: {
@@ -55,66 +56,41 @@ export default defineComponent({
   setup () {
     const store = useStore(storeKey);
     const showPublicKey = ref(false);
-    const {publicKeys, defaults: {displayKeyID}} = store.state.keys;
-    console.log('displayKeyID', displayKeyID, store.state.keys)
-    const publicKeyOptions = ref(publicKeys);
-    const publicKey = ref(publicKeys.find(key => key.keyID === displayKeyID));
+    const publicKeyOptions = ref(store.state.keys.publicKeys);
     
     const publicKeyFilterFn = (inputValue: string, doneFn: (callBackFn: () => void) => void) => {
+      console.log('What are the public keys', store.state.keys.publicKeys);
       if (inputValue === '') {
         doneFn(() => {
-          publicKeyOptions.value = publicKeys
+          publicKeyOptions.value = publicKeys.value
         })
         return
       }
       doneFn(() => {
         const needle = inputValue.toLowerCase()
-        publicKeyOptions.value = publicKeys.filter(v => v.userID.toLowerCase().indexOf(needle) > -1)
+        publicKeyOptions.value = publicKeys.value.filter(v => v.userID.toLowerCase().indexOf(needle) > -1)
       })
     };
 
-    const generateQR = async (text: string) => {
-      console.log('Start QR CODE')
-      let canvas = document.getElementById('qr-code-public-key');
-      await QRCode.toCanvas(canvas, text, { errorCorrectionLevel: 'H' })
-      console.log('Done QR CODE')
-    }
-
     const qrCode = async () => {
-      console.log('Start qrCode')
-      await generateQR(`-----BEGIN PGP PUBLIC KEY BLOCK-----
-
-xjMEYadn5BYJKwYBBAHaRw8BAQdACiQZ9hdhqqpVkU519JQYeWKmVaNzvC8P
-HJDBRJGb/6zNFHRlc3QgPHRlc3RAdGVzdC5jb20+wowEEBYKAB0FAmGnZ+QE
-CwkHCAMVCAoEFgACAQIZAQIbAwIeAQAhCRB0wigC6AxVYxYhBLu3xOcl8t/K
-kKiCu3TCKALoDFVjhA0BAM7WcBw3HlN4iXcVs4jhwwrmhaNqKBiLAFNNjF7a
-uHsiAP4lVR/tqgptHRnttpwtFisbdcIKspuFt6I5OTEGDgdqDM44BGGnZ+QS
-CisGAQQBl1UBBQEBB0CgMWsvRNHHMC+Z7nKlVzx9xIM3gGFTsSooSk5fKTyb
-awMBCAfCeAQYFggACQUCYadn5AIbDAAhCRB0wigC6AxVYxYhBLu3xOcl8t/K
-kKiCu3TCKALoDFVjF9sBAIqc9Ybfm8DsuK36sMBRA45Fx8kGHnznABxdCzaV
-o3PFAP9M2W+H5P4B5k188eGhcgk1S5mwF//NLQKU/rO3QqZODg==
-=h0XG
------END PGP PUBLIC KEY BLOCK-----`)
-
-      console.log('Done qrCode')
+      let canvas = document.getElementById('qr-code-public-key');
+      await QRCode.toCanvas(canvas, fullUrl.value, { errorCorrectionLevel: 'H' })
     }
-
-    const publicKeyValue = computed(() => publicKey.value?.key || '')
-
-    watch(publicKeyValue, (currentValue) => {
-        console.log('Start currentValue', currentValue)
-        // await generateQR(key)
-    });
-
-    watch(publicKey, (currentValue) => {
-      store.commit('keys/changeDefaultDisplay', currentValue?.keyID)
-    });
+      
+    const publicKeys = computed(() => store.state.keys.publicKeys);
+    const publicKeyValue = computed(() => publicKeys.value.find(key => key.keyID === publicKeySelected.value?.keyID)?.key || '')
+    const publicKeySelected = computed({
+      get: () => store.state.keys.publicKeys.find(key => key.keyID === store.state.keys.defaults.displayKeyID),
+      set: val => store.commit('keys/changeDefaultDisplay', val?.keyID)
+    })
+    const fullUrl = computed(() => `${DOMAIN_URL}add?key=${encodeURIComponent(publicKeyValue.value)}`);
 
     return {
       showPublicKey,
-      publicKey,
+      publicKeySelected,
       publicKeyValue,
       publicKeyOptions,
+      fullUrl,
       publicKeyFilterFn,
       exportFile,
       addToClipboard,

@@ -17,7 +17,7 @@ export default defineComponent({
 
     return {
       rows: computed(() => store.state.keys.publicKeys),
-      removeKey: (key: string) => store.commit('keys/removePublicKey', key)
+      removeKey: (keyID: string) => store.commit('keys/removePublicKey', keyID)
     };
   }
 });

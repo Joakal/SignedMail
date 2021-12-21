@@ -36,7 +36,7 @@
                 input-debounce="0"
                 :options="privateKeyOptions"
                 hint="Private Key"
-                option-value="key"
+                option-value="keyID"
                 option-label="userID"
                 @filter="privateKeyFilterFn"
                 v-model="privateKey"
@@ -69,7 +69,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, watch } from 'vue';
+import { defineComponent, ref, computed, watch } from 'vue';
 import { useQuasar } from 'quasar'
 import { useStore } from 'vuex';
 import { storeKey } from 'src/store';
@@ -85,11 +85,11 @@ export default defineComponent({
     const isPwd = ref(false);
     const input = ref('')
     const output = ref('')
-    const privateKey = ref(privateKeys.find(key => key.keyID === signingKeyID));
+    const privateKeyID = ref(signingKeyID);
 
     const handleSigning = async () => {
-      if (privateKey.value) {
-        const signature = await signMessage(input.value, privateKey.value)
+      if (privateKey.value?.key) {
+        const signature = await signMessage(input.value, privateKey.value.key)
         const combined = `${input.value}\n\n${signature}`
 
         output.value = combined;
@@ -116,15 +116,17 @@ export default defineComponent({
       })
     };
 
-    watch(privateKey, (currentValue) => {      
-      store.commit('keys/changeDefaultSigning', currentValue?.keyID)
+    const privateKey = computed(() => privateKeys.find(key => key.keyID === privateKeyID.value))
+
+    watch(privateKeyID, (currentValue) => {      
+      store.commit('keys/changeDefaultSigning', currentValue)
     });
 
     return { 
       isPwd, 
       input, 
       output, 
-      privateKey,
+      privateKeyID,
       privateKeyOptions,
       handleSigning, 
       addToClipboard,

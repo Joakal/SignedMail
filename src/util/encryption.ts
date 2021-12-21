@@ -1,10 +1,10 @@
-import {readKey, decryptKey, readPrivateKey, encrypt, decrypt, createMessage, readMessage, generateKey, KeyPair, EllipticCurveName, KeyOptions, UserID, EncryptOptions, Message, MaybeStream, Data, DecryptOptions, sign, verify, VerifyOptions, readSignature } from 'openpgp';
+import {readKey, decryptKey, readPrivateKey, encrypt, decrypt, createMessage, readMessage, generateKey, EllipticCurveName, KeyOptions, UserID, EncryptOptions, Message, MaybeStream, Data, DecryptOptions, sign, verify, VerifyOptions, readSignature, PrivateKey, PublicKey } from 'openpgp';
 import { Dialog } from 'quasar'
-import { IKeyRecord } from 'src/store/keys/state';
 
-
-export interface CombinedKeyPair extends KeyPair {
-  revocationCertificate: string
+export interface CombinedKeyPair {
+  publicKey: PublicKey;
+  privateKey?: PrivateKey;
+  revocationCertificate?: string;
 }
 
 export interface CombinedEncryptionOptions extends EncryptOptions {
@@ -48,9 +48,11 @@ async function requestPassphrase (): Promise<string | undefined> {
     }).onCancel(()=>resolve(undefined)));
 }
 
-export async function encryptMessage(body: string, publicKey: IKeyRecord, privateKey?: IKeyRecord): Promise<string> {
+export const readImportedKey = (armoredKey: string) => readKey({armoredKey})
+
+export async function encryptMessage(body: string, publicKey: string, privateKey?: string): Promise<string> {
   console.log('Signature is encryptMessage', publicKey);
-  const resolvedPublicKey = await readKey({ armoredKey: publicKey.key });
+  const resolvedPublicKey = await readKey({ armoredKey: publicKey });
   console.log('Signature is encryptMessage');
   const message = await createMessage({ text: body });
   const encryptBody = {
@@ -66,7 +68,7 @@ export async function encryptMessage(body: string, publicKey: IKeyRecord, privat
     }
     console.log('passphrase', passphrase);
     
-    const resolvedPrivateKey = await readPrivateKey({ armoredKey: privateKey.key });
+    const resolvedPrivateKey = await readPrivateKey({ armoredKey: privateKey });
     const decryptedPrivateKey = await decryptKey({
       privateKey: resolvedPrivateKey,
       passphrase
@@ -79,9 +81,9 @@ export async function encryptMessage(body: string, publicKey: IKeyRecord, privat
   return await encrypt(encryptBody) as string;
 }
 
-export async function decryptMessage(encryptedBody: string, privateKey: IKeyRecord, publicKey?: IKeyRecord): Promise<IDecryptionResult> {
+export async function decryptMessage(encryptedBody: string, privateKey: string, publicKey?: string): Promise<IDecryptionResult> {
   console.log('decryptMessage');
-  const resolvedPrivateKey = await readPrivateKey({ armoredKey: privateKey.key });
+  const resolvedPrivateKey = await readPrivateKey({ armoredKey: privateKey });
   console.log('resolvedPrivateKey', resolvedPrivateKey);
   console.log('resolvedPrivateKey getKeyID', resolvedPrivateKey.getKeyID().toHex())
   console.log('resolvedPrivateKey getKeyIDs', resolvedPrivateKey.getKeyIDs().map(key => key.toHex()))
@@ -106,7 +108,7 @@ export async function decryptMessage(encryptedBody: string, privateKey: IKeyReco
   } as DecryptOptions
 
   if (publicKey) {
-    const resolvedPublicKey = await readKey({ armoredKey: publicKey.key });
+    const resolvedPublicKey = await readKey({ armoredKey: publicKey });
     console.log('resolvedPublicKey', resolvedPublicKey);
 
     decryptBody.expectSigned = true;
@@ -126,9 +128,9 @@ export async function decryptMessage(encryptedBody: string, privateKey: IKeyReco
   return { decrypted, verified } as IDecryptionResult;
 }
 
-export async function signMessage(body: string, privateKey: IKeyRecord): Promise<string> {
+export async function signMessage(body: string, privateKey: string): Promise<string> {
 
-  const resolvedPrivateKey = await readPrivateKey({ armoredKey: privateKey.key });
+  const resolvedPrivateKey = await readPrivateKey({ armoredKey: privateKey });
   const passphrase = await requestPassphrase();
   const decryptedPrivateKey = await decryptKey({
     privateKey: resolvedPrivateKey,
@@ -147,8 +149,8 @@ export async function signMessage(body: string, privateKey: IKeyRecord): Promise
   return cleartextMessage;
 }
 
-export async function verifyMessage(body: string, publicKey: IKeyRecord, detachedSignature: string): Promise<boolean> {
-  const resolvedPublicKey = await readKey({ armoredKey: publicKey.key });
+export async function verifyMessage(body: string, publicKey: string, detachedSignature: string): Promise<boolean> {
+  const resolvedPublicKey = await readKey({ armoredKey: publicKey });
   const message = await createMessage({ text: body });
   const signature = await readSignature({
       armoredSignature: detachedSignature // parse detached signature

@@ -5,14 +5,14 @@ const mutation: MutationTree<KeysStateInterface> = {
   addPublicKey(state, keyRecord: IKeyRecord) {
     state.publicKeys.push(keyRecord);
   },
-  removePublicKey(state, removedKey: string) {
-    state.publicKeys = state.publicKeys.filter(keyRecord => keyRecord.key !== removedKey);
+  removePublicKey(state, removedKeyID: string) {
+    state.publicKeys = state.publicKeys.filter(keyRecord => keyRecord.keyID !== removedKeyID);
   },
   addPrivateKey(state, keyRecord: IKeyRecord) {
     state.privateKeys.push(keyRecord);
   },
-  removePrivateKey(state, removedKey: string) {
-    state.privateKeys = state.privateKeys.filter(keyRecord => keyRecord.key !== removedKey);
+  removePrivateKey(state, removedKeyID: string) {
+    state.privateKeys = state.privateKeys.filter(keyRecord => keyRecord.keyID !== removedKeyID);
   },
   changeDefaultEncryptPrivateKey(state, keyID: string) {
     state.defaults.encrypt.privateKeyID = keyID;
