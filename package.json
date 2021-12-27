@@ -8,7 +8,6 @@
   "private": false,
   "scripts": {
     "lint": "eslint --ext .js,.ts,.vue ./",
-    "test": "echo \"No test specified\" && exit 0",
     "dev": "quasar dev",
     "dev:android": "quasar dev -m android --ide",
     "build": "quasar build",

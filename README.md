@@ -2,6 +2,12 @@
 
 Signed encrypted messages
 
+## Tech / practices used:
+- Vue 3
+- Vuex 4
+- Composition API
+- Quasar 3
+
 ## Install the dependencies
 ```bash
 yarn
