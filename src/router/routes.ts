@@ -13,7 +13,8 @@ const routes: RouteRecordRaw[] = [
       { name: 'private', path: 'private', component: () => import('src/pages/PrivateKeys.vue') },
       { name: 'add', path: 'add', component: () => import('src/pages/AddingKeys.vue') },
       { name: 'help', path: 'help', component: () => import('src/pages/Help.vue') },
-      { name: 'about', path: 'about', component: () => import('src/pages/About.vue') }
+      { name: 'about', path: 'about', component: () => import('src/pages/About.vue') },
+      { name: 'privacy', path: 'privacy', component: () => import('src/pages/PrivacyPolicy.vue') }
     ],
   },
 
