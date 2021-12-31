@@ -64,9 +64,9 @@ export default defineComponent({
     const $q = useQuasar()
 
     const hidePassphrase = ref(true);
-    const name = ref('test')
-    const email = ref('test@test.com')
-    const passphrase = ref('test')
+    const name = ref('')
+    const email = ref('')
+    const passphrase = ref('')
     const expanded = ref(false);
     const type: Ref<KeyOptions['type']> = ref('ecc');
     const curve: Ref<EllipticCurveName> = ref('curve25519');
