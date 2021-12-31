@@ -47,7 +47,7 @@ import { storeKey } from 'src/store'
 import { exportFile } from 'quasar'
 import { addToClipboard } from 'src/util/clipboard'
 import QRCode from 'qrcode'
-import { DOMAIN_URL } from 'src/util/constants';
+import { MOBILE_DOMAIN_URL } from 'src/util/constants';
 
 export default defineComponent({
   props: {
@@ -82,7 +82,7 @@ export default defineComponent({
       get: () => store.state.keys.publicKeys.find(key => key.keyID === store.state.keys.defaults.displayKeyID),
       set: val => store.commit('keys/changeDefaultDisplay', val?.keyID)
     })
-    const fullUrl = computed(() => `${DOMAIN_URL}add?key=${encodeURIComponent(publicKeyValue.value)}`);
+    const fullUrl = computed(() => `${MOBILE_DOMAIN_URL}add?key=${encodeURIComponent(publicKeyValue.value)}`);
 
     return {
       showPublicKey,

@@ -1,2 +1,2 @@
 export const URL_KEY = 'url'
-export const DOMAIN_URL = 'signedmail://'
+export const MOBILE_DOMAIN_URL = 'signedmail://'
