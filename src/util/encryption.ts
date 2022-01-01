@@ -33,9 +33,9 @@ export async function createKeys(name: string, email: string, passphrase: string
   });
 }
 
-async function requestPassphrase (): Promise<string | undefined> {
+async function requestPassphrase ({username} = {username: ''}): Promise<string | undefined> {
   return await new Promise(resolve => Dialog.create({
-    title: 'Passphrase to unlock private key',
+    title: `Unlocking private key for ${username}`,
     message: 'Passphrase?',
     prompt: {
       model: '',
@@ -57,13 +57,13 @@ export async function encryptMessage(body: string, publicKey: string, privateKey
   } as CombinedEncryptionOptions
 
   if (privateKey) {
-    const passphrase = await requestPassphrase();
+    const resolvedPrivateKey = await readPrivateKey({ armoredKey: privateKey });
+    const passphrase = await requestPassphrase({username: resolvedPrivateKey.getUserIDs().join(', ')});
 
     if (passphrase === null) {
       return ''; 
     }
     
-    const resolvedPrivateKey = await readPrivateKey({ armoredKey: privateKey });
     const decryptedPrivateKey = await decryptKey({
       privateKey: resolvedPrivateKey,
       passphrase
@@ -78,7 +78,7 @@ export async function encryptMessage(body: string, publicKey: string, privateKey
 export async function decryptMessage(encryptedBody: string, privateKey: string, publicKey?: string): Promise<IDecryptionResult> {
   const resolvedPrivateKey = await readPrivateKey({ armoredKey: privateKey });
 
-  const passphrase = await requestPassphrase();
+  const passphrase = await requestPassphrase({username: resolvedPrivateKey.getUserIDs().join(', ')});
   const decryptedPrivateKey = await decryptKey({
     privateKey: resolvedPrivateKey,
     passphrase
@@ -115,7 +115,7 @@ export async function decryptMessage(encryptedBody: string, privateKey: string, 
 export async function signMessage(body: string, privateKey: string): Promise<string> {
 
   const resolvedPrivateKey = await readPrivateKey({ armoredKey: privateKey });
-  const passphrase = await requestPassphrase();
+  const passphrase = await requestPassphrase({username: resolvedPrivateKey.getUserIDs().join(', ')});
   const decryptedPrivateKey = await decryptKey({
     privateKey: resolvedPrivateKey,
     passphrase
