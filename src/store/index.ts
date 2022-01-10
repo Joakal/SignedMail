@@ -1,15 +1,11 @@
-import { store } from 'quasar/wrappers'
 import { InjectionKey } from 'vue'
 import {
-  createStore,
   Store as VuexStore,
   useStore as vuexUseStore,
 } from 'vuex'
 
-import keys from './keys'
-import plugins from './plugins';
-import { KeysStateInterface } from './keys/state';
-import mutations from './mutations';
+import { KeysStateInterface } from './keys';
+import { ChatsStateInterface } from './chats';
 
 /*
  * If not building with SSR mode, you can
@@ -25,6 +21,7 @@ export interface StateInterface {
   // example: ExampleStateInterface;
   // Declared as unknown to avoid linting issue. Best to strongly type as per the line above.
   keys: KeysStateInterface;
+  chats: ChatsStateInterface;
 }
 
 // provide typings for `this.$store`
@@ -37,20 +34,12 @@ declare module '@vue/runtime-core' {
 // provide typings for `useStore` helper
 export const storeKey: InjectionKey<VuexStore<StateInterface>> = Symbol('vuex-key')
 
-export default store(function (/* { ssrContext } */) {
-  const Store = createStore<StateInterface>({
-    modules: {
-      keys
-    },
-    plugins,
-    mutations,
+export default new VuexStore<StateInterface>({
+  modules: {},
 
-    // enable strict mode (adds overhead!)
-    // for dev mode and --debug builds only
-    strict: !!process.env.DEBUGGING
-  })
-
-  return Store
+  // enable strict mode (adds overhead!)
+  // for dev mode and --debug builds only
+  strict: !!process.env.DEBUGGING
 })
 
 export function useStore() {

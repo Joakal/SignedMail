@@ -3,9 +3,8 @@
 </template>
 
 <script lang="ts">
+import { KeysModule } from 'src/store/keys';
 import { defineComponent, defineAsyncComponent, computed } from 'vue';
-import { useStore } from 'vuex';
-import { storeKey } from 'src/store';
 
 export default defineComponent({
   name: 'Keys',
@@ -13,11 +12,9 @@ export default defineComponent({
     KeyTable: defineAsyncComponent(() => import('components/KeyTable.vue'))
   },
   setup() {
-    const store = useStore(storeKey)
-
     return {
-      rows: computed(() => store.state.keys.publicKeys),
-      removeKey: (keyID: string) => store.commit('keys/removePublicKey', keyID)
+      rows: computed(() => KeysModule.getPublicKeys),
+      removeKey: (keyID: string) => KeysModule.removePublicKey(keyID)
     };
   }
 });

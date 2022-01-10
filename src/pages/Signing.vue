@@ -71,26 +71,24 @@
 <script lang="ts">
 import { defineComponent, ref, computed } from 'vue';
 import { useQuasar } from 'quasar'
-import { useStore } from 'vuex';
-import { storeKey } from 'src/store';
 import {signMessage} from 'src/util/encryption';
 import { addToClipboard } from 'src/util/clipboard'
+import { KeysModule } from 'src/store/keys';
 
 export default defineComponent({
   name: 'Signing',
   setup() {
     const $q = useQuasar()
-    const store = useStore(storeKey);
     const isPwd = ref(false);
     const input = ref('')
     const output = ref('')
-    const privateKeyOptions = ref(store.state.keys.privateKeys);
+    const privateKeyOptions = ref(KeysModule.getPrivateKeys);
 
-    const privateKeys = computed(() => store.state.keys.privateKeys);
+    const privateKeys = computed(() => KeysModule.getPrivateKeys);
 
     const privateKeySelected = computed({
-      get: () => store.state.keys.privateKeys.find(key => key.keyID === store.state.keys.defaults.signingKeyID),
-      set: val => store.commit('keys/changeDefaultSigning', val?.keyID)
+      get: () => KeysModule.getPrivateKeys.find(key => key.keyID === KeysModule.getDefaults.signingKeyID),
+      set: val => KeysModule.changeDefaultSigning(val?.keyID)
     })
 
     const handleSigning = async () => {

@@ -13,10 +13,9 @@
 import { defineComponent, defineAsyncComponent, ref, Ref, computed, onMounted} from 'vue'
 import { useQuasar } from 'quasar'
 import { useRoute } from 'vue-router'
-import { useStore } from 'vuex';
-import { Key } from 'openpgp';
-import { storeKey } from 'src/store';
-import { CombinedKeyPair, readImportedKey } from 'src/util/encryption';
+import { Key, readKey } from 'openpgp';
+import { KeysModule } from 'src/store/keys';
+import { CombinedKeyPair } from 'src/util/encryption';
 
 export default defineComponent({
   name: 'AddingKeys',
@@ -26,25 +25,24 @@ export default defineComponent({
   },
   setup() {
     const $q = useQuasar()
-    const store = useStore(storeKey)
     const route = useRoute()
     const showKeys: Ref<CombinedKeyPair | undefined> = ref(undefined);
 
-    const publicKeys = computed(() => store.state.keys.publicKeys);
-    const privateKeys = computed(() => store.state.keys.privateKeys);
+    const publicKeys = computed(() => KeysModule.getPublicKeys);
+    const privateKeys = computed(() => KeysModule.getPrivateKeys);
     const publicKeyExists = (key: Key) => publicKeys.value.find(publicKey => publicKey.keyID === key.getKeyID().toHex())
     const privateKeyExists = (key: Key) => privateKeys.value.find(privateKey => privateKey.keyID === key.getKeyID().toHex())
 
     const handleAddKey = async (key: string) => {
       try {
-        const keyValue = await readImportedKey(key)
+        const keyValue = await readKey({armoredKey: key})
         if (keyValue.isPrivate() && privateKeyExists(keyValue) || publicKeyExists(keyValue)) {
           $q.notify({
             type: 'negative',
             message: 'This key already exists locally',
           });
         } else {
-          await store.dispatch('keys/importPublicKey', keyValue);
+          await KeysModule.importPublicKey({key: keyValue});
         }
         
         showKeys.value = { publicKey: keyValue };

@@ -26,12 +26,30 @@
       class="bg-grey-1"
     >
       <q-list>
-        <q-item-label
-          header
-          class="text-grey-8"
+        <NavTitle />
+        <q-expansion-item
+          expand-icon-toggle
+          expand-separator
+          icon="mail"
+          label="Change Inbox"
         >
-          Essential Links
-        </q-item-label>
+          <q-item 
+            v-for="user in uniqueUsers" 
+            :key="user.keyID"
+            @click="selectUser(user.keyID)"
+            v-bind="user"
+            clickable
+            exact
+          >
+            <q-item-section avatar>
+              <q-icon name="phone_locked" />
+            </q-item-section>
+
+            <q-item-section>
+              {{user.userID}}
+            </q-item-section>
+          </q-item>
+        </q-expansion-item>
 
         <EssentialLink
           v-for="link in essentialLinks"
@@ -55,7 +73,7 @@ const linksList = [
   {
     title: 'Encrypt',
     icon: 'lock',
-    link: '/'
+    link: '/encrypt'
   },
   {
     title: 'Decrypt',
@@ -99,30 +117,33 @@ const linksList = [
   },
 ];
 
-import { defineComponent, defineAsyncComponent, ref } from 'vue'
-import { useStore } from 'vuex';
-import { storeKey } from 'src/store';
-import { localStorageStore } from 'src/store/plugins';
+import { defineComponent, defineAsyncComponent, ref, computed } from 'vue'
 import { URL_KEY } from 'src/util/constants';
 import { useRouter } from 'vue-router'
+import { KeysModule, restoreKeysFromLocalStorage } from 'src/store/keys';
+import { ChatsModule, restoreMessagessFromLocalStorage } from 'src/store/chats';
 
 export default defineComponent({
   name: 'MainLayout',
 
   components: {
     EssentialLink: defineAsyncComponent(() => import('components/EssentialLink.vue')),
-    GlobalPublicKey: defineAsyncComponent(() => import('components/GlobalPublicKey.vue'))
+    GlobalPublicKey: defineAsyncComponent(() => import('components/GlobalPublicKey.vue')),
+    NavTitle: defineAsyncComponent(() => import('components/NavTitle.vue'))
   },
 
   setup () {
     const router = useRouter()
     const leftDrawerOpen = ref(false)
+    const oldKeysState = restoreKeysFromLocalStorage();
+    const oldMessageState = restoreMessagessFromLocalStorage();
 
-    const store = useStore(storeKey)
-    const oldState = localStorageStore();
+    if (oldKeysState) {
+      KeysModule.initialiseKeys(oldKeysState);
+    }
 
-    if (oldState) {
-      store.commit('initialiseStore', oldState);
+    if (oldMessageState) {
+      ChatsModule.initialiseMessages(oldMessageState);
     }
 
     const urlRedirect = window.localStorage.getItem(URL_KEY);
@@ -134,12 +155,18 @@ export default defineComponent({
 
     const essentialLinks = linksList.map(item => ({...item, link: `${router.options.history.base}${item.link}`}))
     
+    const selectUser = (myPrivateKeyID: string) => {
+      void router.push({ name: 'chats', params: {myPrivateKeyID} })
+    }
+    
     return {
       essentialLinks,
       leftDrawerOpen,
       toggleLeftDrawer () {
         leftDrawerOpen.value = !leftDrawerOpen.value
       },
+      uniqueUsers: computed(() => KeysModule.getPrivateKeys),
+      selectUser
     }
   }
 })

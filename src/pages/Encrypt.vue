@@ -100,37 +100,35 @@
 <script lang="ts">
 import { defineComponent, ref, computed } from 'vue';
 import { useQuasar } from 'quasar'
-import { useStore } from 'vuex';
-import { storeKey } from 'src/store';
 import {encryptMessage} from 'src/util/encryption';
 import { addToClipboard } from 'src/util/clipboard'
+import { KeysModule } from 'src/store/keys';
 
 export default defineComponent({
   name: 'Encrypt',
   setup() {
     const $q = useQuasar()
-    const store = useStore(storeKey);
     const isPwd = ref(false);
     const input = ref('')
     const output = ref('')
-    const publicKeyOptions = ref(store.state.keys.publicKeys);
-    const privateKeyOptions = ref(store.state.keys.privateKeys);
+    const publicKeyOptions = ref(KeysModule.getPublicKeys);
+    const privateKeyOptions = ref(KeysModule.getPrivateKeys);
 
-    const publicKeys = computed(() => store.state.keys.publicKeys);
-    const privateKeys = computed(() => store.state.keys.privateKeys);
+    const publicKeys = computed(() => KeysModule.getPublicKeys);
+    const privateKeys = computed(() => KeysModule.getPrivateKeys);
 
     const publicKeySelected = computed({
-      get: () => store.state.keys.publicKeys.find(key => key.keyID === store.state.keys.defaults.encrypt.publicKeyID),
-      set: val => store.commit('keys/changeDefaultEncryptPublicKey', val?.keyID)
+      get: () => KeysModule.getPublicKeys.find(key => key.keyID === KeysModule.getDefaults.encrypt.publicKeyID),
+      set: val => KeysModule.changeDefaultEncryptPublicKey(val?.keyID)
     })
     const privateKeySelected = computed({
-      get: () => store.state.keys.privateKeys.find(key => key.keyID === store.state.keys.defaults.encrypt.privateKeyID),
-      set: val => store.commit('keys/changeDefaultEncryptPrivateKey', val?.keyID)
+      get: () => KeysModule.getPrivateKeys.find(key => key.keyID === KeysModule.getDefaults.encrypt.privateKeyID),
+      set: val => KeysModule.changeDefaultEncryptPrivateKey(val?.keyID)
     })
 
     const handleEncrypt = async () => {
-      if (publicKeySelected.value) {
-        output.value = await encryptMessage(input.value, publicKeySelected.value.key, privateKeySelected.value?.key)
+      if (publicKeySelected.value && privateKeySelected.value) {
+        output.value = await encryptMessage(input.value, publicKeySelected.value.key, privateKeySelected.value.key)
       } else {
         $q.notify({
           type: 'negative',

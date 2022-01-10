@@ -42,21 +42,19 @@
 
 <script lang="ts">
 import { defineComponent, ref, computed} from 'vue'
-import { useStore } from 'vuex';
-import { storeKey } from 'src/store'
 import { exportFile } from 'quasar'
 import { addToClipboard } from 'src/util/clipboard'
 import QRCode from 'qrcode'
 import { MOBILE_DOMAIN_URL } from 'src/util/constants';
+import { KeysModule } from 'src/store/keys';
 
 export default defineComponent({
   props: {
     
   },
   setup () {
-    const store = useStore(storeKey);
     const showPublicKey = ref(false);
-    const publicKeyOptions = ref(store.state.keys.publicKeys);
+    const publicKeyOptions = ref(KeysModule.getPublicKeys);
     
     const publicKeyFilterFn = (inputValue: string, doneFn: (callBackFn: () => void) => void) => {
       if (inputValue === '') {
@@ -76,11 +74,11 @@ export default defineComponent({
       await QRCode.toCanvas(canvas, fullUrl.value, { errorCorrectionLevel: 'H' })
     }
       
-    const publicKeys = computed(() => store.state.keys.publicKeys);
+    const publicKeys = computed(() => KeysModule.getPublicKeys);
     const publicKeyValue = computed(() => publicKeys.value.find(key => key.keyID === publicKeySelected.value?.keyID)?.key || '')
     const publicKeySelected = computed({
-      get: () => store.state.keys.publicKeys.find(key => key.keyID === store.state.keys.defaults.displayKeyID),
-      set: val => store.commit('keys/changeDefaultDisplay', val?.keyID)
+      get: () => KeysModule.getPublicKeys.find(key => key.keyID === KeysModule.getDefaults.displayKeyID),
+      set: val => KeysModule.changeDefaultDisplay(val?.keyID)
     })
     const fullUrl = computed(() => `${MOBILE_DOMAIN_URL}add?key=${encodeURIComponent(publicKeyValue.value)}`);
 

@@ -50,23 +50,21 @@
 <script lang="ts">
 import { defineComponent, ref, Ref } from 'vue'
 import { useQuasar } from 'quasar'
-import { useStore } from 'vuex';
 import { createKeys, CombinedKeyPair, emailRegex, createTypeOptions, createCurveOptions } from 'src/util/encryption';
-import { storeKey } from 'src/store'
 import { EllipticCurveName, KeyOptions } from 'openpgp';
+import { KeysModule } from 'src/store/keys';
 export default defineComponent({
   name: 'NewKey',
   emits: {
     newKeys: (payload: CombinedKeyPair): boolean => !!payload,
   },
   setup(_props, { emit }) {
-    const store = useStore(storeKey)
     const $q = useQuasar()
 
     const hidePassphrase = ref(true);
-    const name = ref('')
-    const email = ref('')
-    const passphrase = ref('')
+    const name = ref('test')
+    const email = ref('test@test.com')
+    const passphrase = ref('test')
     const expanded = ref(false);
     const type: Ref<KeyOptions['type']> = ref('ecc');
     const curve: Ref<EllipticCurveName> = ref('curve25519');
@@ -75,7 +73,7 @@ export default defineComponent({
       try {
         const keys = await createKeys(name.value, email.value, passphrase.value, type.value, curve.value)
         if (keys) {
-          await store.dispatch('keys/addKeys', keys);
+          await KeysModule.addKeys({keys});
 
           emit('newKeys', keys);
         }

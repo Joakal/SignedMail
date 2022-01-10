@@ -33,7 +33,7 @@ export async function createKeys(name: string, email: string, passphrase: string
   });
 }
 
-async function requestPassphrase ({username} = {username: ''}): Promise<string | undefined> {
+export async function requestPassphrase ({username} = {username: ''}): Promise<string | undefined> {
   return await new Promise(resolve => Dialog.create({
     title: `Unlocking private key for ${username}`,
     message: 'Passphrase?',
@@ -46,7 +46,11 @@ async function requestPassphrase ({username} = {username: ''}): Promise<string |
     }).onCancel(()=>resolve(undefined)));
 }
 
-export const readImportedKey = (armoredKey: string) => readKey({armoredKey})
+export const getUserIDFromKey = async (armoredKey: string) => {
+  const keyValue = await readKey({armoredKey})
+
+  return keyValue.getUserIDs();
+}
 
 export async function encryptMessage(body: string, publicKey: string, privateKey?: string): Promise<string> {
   const resolvedPublicKey = await readKey({ armoredKey: publicKey });
@@ -102,7 +106,7 @@ export async function decryptMessage(encryptedBody: string, privateKey: string, 
 
   const { data: decrypted, signatures} = await decrypt(decryptBody)
 
-  let verified = undefined;
+  let verified = false;
 
   if (publicKey) {
     await signatures[0].verified;

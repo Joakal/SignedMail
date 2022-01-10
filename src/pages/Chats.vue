@@ -1,0 +1,138 @@
+<template>
+  <q-page>
+    <q-banner class="bg-primary text-white">
+      {{privateKey?.userID}} Chats
+    </q-banner>
+    <span v-if="hasEncryptedMessages">
+      There are messages that are currently encrypted.
+      <q-btn color="primary" @click="retryDecryption">Try decrypting again</q-btn>
+    </span>
+    <span v-else-if="uniqueChats.length === 0">
+      No chats found. Start one below from the list.
+    </span>
+    <q-list v-else dense bordered padding class="rounded-borders">
+      <q-item 
+        v-for="chat in uniqueChats"
+        :key="chat.detail.theirPublicKeyID"
+        v-bind="chat"
+        clickable
+        v-ripple
+        @click="rowClick(chat.detail.theirPublicKeyID)"
+        >
+        <q-item-section>
+          <span class="text-h6">
+            {{chat.detail.userID}}
+          </span>
+          <span class="text-subtitle1">
+            {{chat.detail.createdDate}}
+          </span>
+        </q-item-section>
+      </q-item>
+    </q-list>
+    <div class="row q-pa-sm q-gutter-md">
+      <q-select
+        filled
+        use-input
+        hide-selected
+        fill-input
+        input-debounce="0"
+        :options="publicKeyOptions"
+        hint="Public Keys"
+        option-value="keyID"
+        option-label="userID"
+        @filter="publicKeyFilterFn"
+        v-model="publicKeySelected"
+      >
+        <template v-slot:no-option>
+          <q-item>
+            <q-item-section class="text-grey">
+              No results
+            </q-item-section>
+          </q-item>
+        </template>
+      </q-select>
+    </div>
+    <div class="row q-gutter-md">
+      <q-btn color="primary" label="Start chat" @click="startChat" :disable="!publicKeySelected" />
+    </div>
+  </q-page>
+</template>
+
+<script lang="ts">
+import { useQuasar } from 'quasar';
+import { defineComponent, ref, Ref, computed, onMounted, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { ChatsModule } from 'src/store/chats';
+import { IKeyRecord, KeysModule } from 'src/store/keys';
+import { processMessagesToChats } from 'src/util/chatting';
+
+export default defineComponent({
+  name: 'Chats',
+  setup() {
+    const $q = useQuasar();
+    const router = useRouter();
+    const route = useRoute();
+    const myPrivateKeyID = ref('');
+    const publicKeySelected: Ref<IKeyRecord | undefined> = ref();
+    const publicKeyOptions = ref(KeysModule.getPublicKeys);
+
+    const chats = computed(() => ChatsModule.getChatsByPrivateKeyID(myPrivateKeyID.value));
+    const uniqueChats = computed(() => ChatsModule.getUniqueChatsByPrivateKeyID(myPrivateKeyID.value));
+    const messages = computed(() => ChatsModule.getMessagesByPrivateKeyID(myPrivateKeyID.value));
+    const privateKey = computed(() => KeysModule.getPrivateKeyByKeyID(myPrivateKeyID.value));
+
+    const publicKeys = computed(() => KeysModule.getPublicKeys);
+    
+    const publicKeyFilterFn = (inputValue: string, doneFn: (callBackFn: () => void) => void) => {
+      if (inputValue === '') {
+        doneFn(() => {
+          publicKeyOptions.value = publicKeys.value
+        })
+        return
+      }
+      doneFn(() => {
+        const needle = inputValue.toLowerCase()
+        publicKeyOptions.value = publicKeys.value.filter(v => v.userID.toLowerCase().indexOf(needle) > -1)
+      })
+    };
+    
+    const processInboxChange = async () => {
+      if (messages.value.length > chats.value.length) {
+        try {
+          await processMessagesToChats(myPrivateKeyID.value);
+        } catch (exception: unknown) {
+          const error = exception as Error;
+          $q.notify({
+            type: 'negative',
+            message: `Could not convert messages into chats. Reason: ${error.message}`,
+          });
+        }
+      }
+    }
+
+    onMounted(async () => {
+      if (route.params.myPrivateKeyID) {
+        myPrivateKeyID.value = route.params.myPrivateKeyID as string
+        await processInboxChange();
+      }
+    })
+    
+    watch(() => route.params.myPrivateKeyID, async () => {
+      myPrivateKeyID.value = route.params.myPrivateKeyID as string
+      await processInboxChange();
+    });
+
+    return {
+      hasEncryptedMessages: computed(() => ChatsModule.hasEncryptedMessages(myPrivateKeyID.value)),
+      uniqueChats,
+      rowClick: (theirPublicKeyID: string) => router.push({ name: 'chat' , params: { theirPublicKeyID } }),
+      startChat: () => publicKeySelected.value ? router.push({ name: 'chat' , params: { theirPublicKeyID: publicKeySelected.value.keyID } }) : null,
+      publicKeyOptions,
+      publicKeySelected,
+      publicKeyFilterFn,
+      privateKey,
+      retryDecryption: async () => await processInboxChange(),
+    };
+  }
+});
+</script>

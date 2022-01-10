@@ -69,25 +69,23 @@
 <script lang="ts">
 import { defineComponent, ref, computed } from 'vue';
 import { useQuasar } from 'quasar'
-import { useStore } from 'vuex';
-import { storeKey } from 'src/store';
 import {verifyMessage} from 'src/util/encryption';
 import { addToClipboard } from 'src/util/clipboard'
+import { KeysModule } from 'src/store/keys';
 
 export default defineComponent({
   name: 'Verifying',
   setup() {
     const $q = useQuasar()
-    const store = useStore(storeKey);
     const isPwd = ref(false);
     const input = ref('')
     const detachedSignature = ref('')
-    const publicKeyOptions = ref(store.state.keys.publicKeys);
+    const publicKeyOptions = ref(KeysModule.getPublicKeys);
 
-    const publicKeys = computed(() => store.state.keys.publicKeys);
+    const publicKeys = computed(() => KeysModule.getPublicKeys);
     const publicKeySelected = computed({
-      get: () => store.state.keys.publicKeys.find(key => key.keyID === store.state.keys.defaults.verifyingKeyID),
-      set: val => store.commit('keys/changeDefaultVerifying', val?.keyID)
+      get: () => KeysModule.getPublicKeys.find(key => key.keyID === KeysModule.getDefaults.verifyingKeyID),
+      set: val => KeysModule.changeDefaultVerifying(val?.keyID)
     })
     
     const handleVerifying = async () => {

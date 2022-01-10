@@ -5,7 +5,10 @@ const routes: RouteRecordRaw[] = [
     path: '/',
     component: () => import('layouts/MainLayout.vue'),
     children: [
-      { name: 'encrypt', path: '', component: () => import('src/pages/Encrypt.vue')},
+      { name: 'home', path: '', component: () => import('src/pages/Chat.vue')},
+      { name: 'chats', path: 'chats/:myPrivateKeyID', component: () => import('src/pages/Chats.vue')},
+      { name: 'chat', path: 'chats/:myPrivateKeyID/:theirPublicKeyID', component: () => import('src/pages/Chat.vue')},
+      { name: 'encrypt', path: 'encrypt', component: () => import('src/pages/Encrypt.vue')},
       { name: 'decrypt', path: 'decrypt', component: () => import('src/pages/Decrypt.vue')},
       { name: 'signing', path: 'signing', component: () => import('src/pages/Signing.vue')},
       { name: 'verifying', path: 'verifying', component: () => import('src/pages/Verifying.vue')},

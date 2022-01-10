@@ -101,45 +101,43 @@
 <script lang="ts">
 import { defineComponent, ref, computed } from 'vue';
 import { useQuasar } from 'quasar'
-import { useStore } from 'vuex';
-import { storeKey } from 'src/store';
 import {decryptMessage, IDecryptionResult} from 'src/util/encryption';
 import { addToClipboard } from 'src/util/clipboard'
+import { KeysModule } from 'src/store/keys';
 
 export default defineComponent({
   name: 'Decrypt',
   setup() {
     const $q = useQuasar()
-    const store = useStore(storeKey);
     const isPwd = ref(false);
     const input = ref('');
     const decryptedBody = ref<IDecryptionResult>({ decrypted: '', verified: false });
-    const publicKeyOptions = ref(store.state.keys.publicKeys);
-    const privateKeyOptions = ref(store.state.keys.privateKeys);
+    const publicKeyOptions = ref(KeysModule.getPublicKeys);
+    const privateKeyOptions = ref(KeysModule.getPrivateKeys);
     
     const output = computed(() => decryptedBody.value.decrypted);
-    const publicKeys = computed(() => store.state.keys.publicKeys);
-    const privateKeys = computed(() => store.state.keys.privateKeys);
+    const publicKeys = computed(() => KeysModule.getPublicKeys);
+    const privateKeys = computed(() => KeysModule.getPrivateKeys);
 
     const publicKeySelected = computed({
-      get: () => store.state.keys.publicKeys.find(key => key.keyID === store.state.keys.defaults.decrypt.publicKeyID),
-      set: val => store.commit('keys/changeDefaultDecryptPublicKey', val?.keyID)
+      get: () => KeysModule.getPublicKeys.find(key => key.keyID === KeysModule.getDefaults.decrypt.publicKeyID),
+      set: val => KeysModule.changeDefaultDecryptPublicKey(val?.keyID)
     })
     const privateKeySelected = computed({
-      get: () => store.state.keys.privateKeys.find(key => key.keyID === store.state.keys.defaults.decrypt.privateKeyID),
-      set: val => store.commit('keys/changeDefaultDecryptPrivateKey', val?.keyID)
+      get: () => KeysModule.getPrivateKeys.find(key => key.keyID === KeysModule.getDefaults.decrypt.privateKeyID),
+      set: val => KeysModule.changeDefaultDecryptPrivateKey(val?.keyID)
     })
 
     const handleDecrypt = async () => {
       if (privateKeySelected.value) {
-        try {
+        // try {
           decryptedBody.value = await decryptMessage(input.value, privateKeySelected.value.key, publicKeySelected.value?.key);
-        } catch ({message}) {
-          $q.notify({
-            type: 'negative',
-            message: message as string,
-          });
-        }
+        // } catch ({message}) {
+        //   $q.notify({
+        //     type: 'negative',
+        //     message: message as string,
+        //   });
+        // }
       } else {
         $q.notify({
           type: 'negative',
@@ -153,7 +151,7 @@ export default defineComponent({
         doneFn(() => {
           publicKeyOptions.value = publicKeys.value
         })
-        return
+        return;
       }
       doneFn(() => {
         const needle = inputValue.toLowerCase()
@@ -166,7 +164,7 @@ export default defineComponent({
         doneFn(() => {
           privateKeyOptions.value = privateKeys.value
         })
-        return
+        return;
       }
       doneFn(() => {
         const needle = inputValue.toLowerCase()
