@@ -62,7 +62,6 @@ import { processMessagesToChats } from 'src/util/chatting';
 import { KeysModule } from 'src/store/keys';
 
 const isValidMessage = async (message: string) => {
-  // Try
   try {
     await readMessage({ armoredMessage: message });
     return true;

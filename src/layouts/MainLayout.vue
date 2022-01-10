@@ -28,7 +28,6 @@
       <q-list>
         <NavTitle />
         <q-expansion-item
-          expand-icon-toggle
           expand-separator
           icon="mail"
           label="Change Inbox"

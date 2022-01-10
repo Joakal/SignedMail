@@ -74,14 +74,14 @@ export default defineComponent({
     const route = useRoute();
     const myPrivateKeyID = ref('');
     const publicKeySelected: Ref<IKeyRecord | undefined> = ref();
-    const publicKeyOptions = ref(KeysModule.getPublicKeys);
+    const publicKeyOptions: Ref<IKeyRecord[]> = ref([]);
+    const publicKeys: Ref<IKeyRecord[]> = ref([]);
 
     const chats = computed(() => ChatsModule.getChatsByPrivateKeyID(myPrivateKeyID.value));
     const uniqueChats = computed(() => ChatsModule.getUniqueChatsByPrivateKeyID(myPrivateKeyID.value));
     const messages = computed(() => ChatsModule.getMessagesByPrivateKeyID(myPrivateKeyID.value));
     const privateKey = computed(() => KeysModule.getPrivateKeyByKeyID(myPrivateKeyID.value));
 
-    const publicKeys = computed(() => KeysModule.getPublicKeys);
     
     const publicKeyFilterFn = (inputValue: string, doneFn: (callBackFn: () => void) => void) => {
       if (inputValue === '') {
@@ -97,6 +97,9 @@ export default defineComponent({
     };
     
     const processInboxChange = async () => {
+      myPrivateKeyID.value = route.params.myPrivateKeyID as string
+      publicKeyOptions.value = await KeysModule.getPublicKeysWithoutPrivateKey(myPrivateKeyID.value)
+      console.log('Lengths', publicKeyOptions.value.length)
       if (messages.value.length > chats.value.length) {
         try {
           await processMessagesToChats(myPrivateKeyID.value);
@@ -112,14 +115,18 @@ export default defineComponent({
 
     onMounted(async () => {
       if (route.params.myPrivateKeyID) {
-        myPrivateKeyID.value = route.params.myPrivateKeyID as string
         await processInboxChange();
       }
     })
     
     watch(() => route.params.myPrivateKeyID, async () => {
-      myPrivateKeyID.value = route.params.myPrivateKeyID as string
       await processInboxChange();
+    });
+
+    watch(myPrivateKeyID, async () => {
+      if (myPrivateKeyID.value) {
+        publicKeys.value = await KeysModule.getPublicKeysWithoutPrivateKey(myPrivateKeyID.value)
+      }
     });
 
     return {

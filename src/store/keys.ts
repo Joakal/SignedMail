@@ -190,6 +190,20 @@ export default class Keys extends VuexModule {
     return this.publicKeys;
   }
 
+  get getPublicKeysWithoutPrivateKey () {
+    return async (privateKeyID: string) => {
+      const privateKey = this.getPrivateKeyByKeyID(privateKeyID);
+      if (!privateKey) {
+        return [];
+      }
+      const publicKeyID = await getPublicKeyId(privateKey.key)
+
+      return this.publicKeys.filter(publicKey => {
+        return publicKey.keyID !== publicKeyID
+      })
+    }
+  }
+
   get getPublicKeyByKeyID () {
     return (publicKeyID: string) => this.publicKeys.find(publicKey => {
       return publicKey.keyID === publicKeyID

@@ -130,14 +130,14 @@ export default defineComponent({
 
     const handleDecrypt = async () => {
       if (privateKeySelected.value) {
-        // try {
+        try {
           decryptedBody.value = await decryptMessage(input.value, privateKeySelected.value.key, publicKeySelected.value?.key);
-        // } catch ({message}) {
-        //   $q.notify({
-        //     type: 'negative',
-        //     message: message as string,
-        //   });
-        // }
+        } catch ({message}) {
+          $q.notify({
+            type: 'negative',
+            message: message as string,
+          });
+        }
       } else {
         $q.notify({
           type: 'negative',
