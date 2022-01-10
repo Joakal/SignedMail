@@ -33,10 +33,9 @@
           label="Change Inbox"
         >
           <q-item 
-            v-for="user in uniqueUsers" 
+            v-for="user in uniqueUsers"
             :key="user.keyID"
             @click="selectUser(user.keyID)"
-            v-bind="user"
             clickable
             exact
           >

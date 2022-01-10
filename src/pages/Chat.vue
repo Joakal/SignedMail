@@ -22,6 +22,7 @@
         :text-color="chat.detail.verification === 'self' ? 'white' : 'black'"
         :bg-color="chat.detail.verification === 'self' ? 'primary' : 'grey-4'"
         clickable
+        @click="chat.detail.verification === 'self' && clickMessage(chat.chat)"
         exact
       >
         <template v-slot:stamp v-if="chat.detail.verification !== 'self'">
@@ -37,9 +38,9 @@
           </q-icon>
         </template>
       </q-chat-message>
-      <q-input bottom-slots v-model="text" type="textarea">
+      <q-input bottom-slots v-model="inputChat" type="textarea">
         <template v-slot:append>
-          <q-icon v-if="text !== ''" name="close" @click="text = ''" class="cursor-pointer" />
+          <q-icon v-if="inputChat !== ''" name="close" @click="inputChat = ''" class="cursor-pointer" />
         </template>
 
         <template v-slot:after>
@@ -78,7 +79,7 @@ export default defineComponent({
     const route = useRoute();
     const myPrivateKeyID = ref('');
     const theirPublicKeyID = ref('');
-    const text = ref('');
+    const inputChat = ref('');
 
     const chats = computed(() => ChatsModule.getChatsByPrivateKeyIDAndPublicKeyID(myPrivateKeyID.value, theirPublicKeyID.value));
     const messages = computed(() => ChatsModule.getMessagesByPrivateKeyID(myPrivateKeyID.value));
@@ -111,14 +112,15 @@ export default defineComponent({
 
     const submitMessage = async () => {
       // Determine if message () or plain text (from me to them)
-      const isMessage = await isValidMessage(text.value)
+      const isMessage = await isValidMessage(inputChat.value)
       
       try {
         if (isMessage) {
-          await processMessage(text.value)
+          await processMessage(inputChat.value)
         } else {
-          const { theirEncryptedMessage } = await myCreateMessage(text.value, theirPublicKeyID.value, myPrivateKeyID.value)
-          await addToClipboard({label: 'Encrypted message copied to clipboard', value: theirEncryptedMessage})
+          const { chat, message } = await encryptMessage();
+          ChatsModule.addChat({chat})
+          ChatsModule.addMessage({message})
         }
       } catch (exception: unknown) {
         const error = exception as Error;
@@ -127,17 +129,23 @@ export default defineComponent({
           message: `Could not process message. Reason: ${error.message}`,
         });
       }
-      text.value = '';
+      inputChat.value = '';
+    }
+
+    const encryptMessage = async (text?: string) => {
+      const { theirEncryptedMessage, chat, message } = await myCreateMessage(text ? text : inputChat.value, theirPublicKeyID.value, myPrivateKeyID.value)
+      await addToClipboard({label: 'Encrypted message copied to clipboard', value: theirEncryptedMessage})
+      return { chat, message }
     }
 
     return {
       hasEncryptedMessages: computed(() => ChatsModule.hasEncryptedMessages(myPrivateKeyID.value)),
-      text,
+      inputChat,
       chats,
       theirPublicKeyID,
       publicKey,
       rowClick: (id: string) => router.push({ name: 'history' , params: { id } }),
-      clickMessage: () => console.log('Message clicked!'),
+      clickMessage: encryptMessage,
       submitMessage,
       retryDecryption: async () => await processInboxChange(),
       goBack: () => router.push({ name: 'chats' , params: { myPrivateKeyID: myPrivateKeyID.value } }),

@@ -99,7 +99,6 @@ export default defineComponent({
     const processInboxChange = async () => {
       myPrivateKeyID.value = route.params.myPrivateKeyID as string
       publicKeyOptions.value = await KeysModule.getPublicKeysWithoutPrivateKey(myPrivateKeyID.value)
-      console.log('Lengths', publicKeyOptions.value.length)
       if (messages.value.length > chats.value.length) {
         try {
           await processMessagesToChats(myPrivateKeyID.value);

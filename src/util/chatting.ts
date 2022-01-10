@@ -1,7 +1,7 @@
 import { createMessage, decrypt, decryptKey, encrypt, readKey, readMessage, readPrivateKey } from 'openpgp';
 import { requestPassphrase } from 'app/src/util/encryption'
 import { KeysModule } from 'src/store/keys';
-import { ChatsModule, IChat, verificationKeys } from 'src/store/chats';
+import { ChatsModule, IChat, IMessage, verificationKeys } from 'src/store/chats';
 
 export interface IMyChat {
   theirPublicKeyID: string;
@@ -73,28 +73,25 @@ export async function myCreateMessage(input: string, theirPublicKeyID: string, m
 
   const { created } = subsignature.packets[0];
 
-  ChatsModule.addChat({chat: {
-    detail: {
-      theirPublicKeyID,
-      myPrivateKeyID,
-      verification: 'self',
-      userID: theirResolvedPublicKey.getUserIDs().join(', '),
-      chatUserID: decryptedPrivateKey.getUserIDs().join(', '),
-      createdDate: created,
-    },
-    chat: input
-  } as IChat})
-
-  ChatsModule.addMessage({message: {
-    detail: {
-      myPrivateKeyID,
-    },
-    message: myEncryptedMessage
-  }})
-
   return {
-    myEncryptedMessage,
     theirEncryptedMessage,
+    chat: {
+      detail: {
+        theirPublicKeyID,
+        myPrivateKeyID,
+        verification: 'self',
+        userID: theirResolvedPublicKey.getUserIDs().join(', '),
+        chatUserID: decryptedPrivateKey.getUserIDs().join(', '),
+        createdDate: created,
+      },
+      chat: input
+    } as IChat,
+    message: {
+      detail: {
+        myPrivateKeyID,
+      },
+      message: myEncryptedMessage
+    } as IMessage,
     error
   }
 }
