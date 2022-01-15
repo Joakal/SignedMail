@@ -1,1 +1,21 @@
 // app global css in SCSS form
+
+@import "../../node_modules/rfs/scss";
+
+:root {
+  @include rfs(4rem, --h1-font-size);
+  @include rfs(2rem, --h2-font-size);
+  @include rfs(1.7rem, --h3-font-size);
+}
+
+h1 {
+  font-size: var(--h1-font-size);
+}
+
+h2 {
+  font-size: var(--h2-font-size);
+}
+
+h3 {
+  font-size: var(--h3-font-size);
+}

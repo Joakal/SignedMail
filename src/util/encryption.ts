@@ -35,8 +35,8 @@ export async function createKeys(name: string, email: string, passphrase: string
 
 export async function requestPassphrase ({username} = {username: ''}): Promise<string | undefined> {
   return await new Promise(resolve => Dialog.create({
-    title: `Unlocking private key for ${username}`,
-    message: 'Passphrase?',
+    title: `Passphrase for ${username}`,
+    message: 'Unlocking private key is required for reading and signing messages',
     prompt: {
       model: '',
       type: 'text'

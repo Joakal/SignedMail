@@ -3,7 +3,7 @@
     @submit="handleCreateKeys"
     class="q-gutter-md justify-center"
   >
-    <h3>Create new keys</h3>
+    <h1>Create new keys</h1>
     <q-input
       label="Full name"
       v-model="name"
