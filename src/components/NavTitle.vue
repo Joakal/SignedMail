@@ -1,73 +1,79 @@
 <template>
-  <q-item-label
-    header
-    class="text-grey-8"
-  >
-    <div v-if="!privateKeyExists">
-      <router-link :to="{name: 'add'}" replace>Add Key</router-link> <span>to get started</span>
-    </div>
-    <div v-else-if="!currentKeyValue">
-      <span>Select Inbox below</span>
-    </div>
-    <div v-else>
-      {{currentUserIDs}}
-    </div>
-  </q-item-label>
+  <div>
+    <q-item-label
+      header
+    >
+      <div v-if="!privateKeyExists">
+        <router-link :to="{name: 'add'}" replace>Add Key</router-link> <span>to get started</span>
+      </div>
+      <div v-else-if="!currentKeyValue">
+        <span>Select Inbox below</span>
+      </div>
+      <div>
+        <q-item 
+          clickable
+          tag="a"
+          @click="selectUser(currentKeyValue.keyID)"
+        >
+          <q-item-section avatar>
+            <q-icon name="phone_locked" />
+          </q-item-section>
+
+          <q-item-section>
+            {{currentKeyValue?.userID}}
+          </q-item-section>
+        </q-item>
+      </div>
+    </q-item-label>
+    <q-expansion-item
+      expand-separator
+      icon="mail"
+      label="Change Inbox"
+      v-if="uniqueUsers.length"
+    >
+      <q-item 
+        v-for="user in uniqueUsers"
+        :key="user.keyID"
+        @click="selectUser(user.keyID)"
+        clickable
+        exact
+      >
+        <q-item-section avatar>
+          <q-icon name="phone_locked" />
+        </q-item-section>
+
+        <q-item-section>
+          {{user.userID}}
+        </q-item-section>
+      </q-item>
+    </q-expansion-item>
+  </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref,computed, watch } from 'vue'
-import { getUserIDFromKey } from 'src/util/encryption';
+import { defineComponent, ref,computed, } from 'vue'
+import { useRouter } from 'vue-router'
 import { KeysModule } from 'src/store/keys';
 
 export default defineComponent({
   name: 'NavTitle',
   setup () {
+    const router = useRouter()
     const currentUserIDs = ref('');
     const privateKeyExists = ref(KeysModule.getPrivateKeys.length);
-    const privateKeyOptions = ref(KeysModule.getPrivateKeys);
-    const privateKeys = computed(() => KeysModule.getPrivateKeys);
-
-    const currentKeyValue = computed(() => {
-      const current = KeysModule.getDefaults.chat.privateKeyID
-      if (!current) {
-        return;
-      }
-      return KeysModule.getPrivateKeys.find(privateKey => privateKey.keyID === current);
-    })
-
-    const privateKeySelected = computed({
-      get: () => KeysModule.getPrivateKeys.find(key => key.keyID === KeysModule.getDefaults.chat.privateKeyID),
-      set: val => KeysModule.changeDefaultChatPrivateKey(val?.keyID)
-    });
+    const currentKeyValue = computed(() => KeysModule.getPrivateKeyByChatDefault())
     
-    const privateKeyFilterFn = (inputValue: string, doneFn: (callBackFn: () => void) => void) => {
-      if (inputValue === '') {
-        doneFn(() => {
-          privateKeyOptions.value = privateKeys.value
-        })
-        return;
-      }
-      doneFn(() => {
-        const needle = inputValue.toLowerCase()
-        privateKeyOptions.value = privateKeys.value.filter(v => v.userID.toLowerCase().indexOf(needle) > -1)
-      })
-    };
-
-    watch(currentKeyValue, async () => {
-      if (currentKeyValue.value) {
-        const userIDs = await getUserIDFromKey(currentKeyValue.value.key);
-        currentUserIDs.value = userIDs.join(', ');
-      }
-    });
+    const selectUser = (myPrivateKeyID: string) => {
+      KeysModule.changeDefaultChatPrivateKey(myPrivateKeyID)
+      void router.push({ name: 'chats', params: {myPrivateKeyID} })
+    }
     
     return {
       privateKeyExists,
       currentKeyValue,
       currentUserIDs,
-      privateKeyOptions,
-      privateKeyFilterFn,
-      privateKeySelected,
+      uniqueUsers: computed(() => KeysModule.getPrivateKeys.filter(privateKey => privateKey.keyID !== currentKeyValue?.value?.keyID)),
+      selectUser
     }
   }
 })

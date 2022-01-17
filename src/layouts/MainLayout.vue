@@ -27,28 +27,6 @@
     >
       <q-list>
         <NavTitle />
-        <q-expansion-item
-          expand-separator
-          icon="mail"
-          label="Change Inbox"
-        >
-          <q-item 
-            v-for="user in uniqueUsers"
-            :key="user.keyID"
-            @click="selectUser(user.keyID)"
-            clickable
-            exact
-          >
-            <q-item-section avatar>
-              <q-icon name="phone_locked" />
-            </q-item-section>
-
-            <q-item-section>
-              {{user.userID}}
-            </q-item-section>
-          </q-item>
-        </q-expansion-item>
-
         <EssentialLink
           v-for="link in essentialLinks"
           :key="link.title"
@@ -115,7 +93,7 @@ const linksList = [
   },
 ];
 
-import { defineComponent, defineAsyncComponent, ref, computed } from 'vue'
+import { defineComponent, defineAsyncComponent, ref } from 'vue'
 import { URL_KEY } from 'src/util/constants';
 import { useRouter } from 'vue-router'
 import { KeysModule, restoreKeysFromLocalStorage } from 'src/store/keys';
@@ -153,18 +131,12 @@ export default defineComponent({
 
     const essentialLinks = linksList.map(item => ({...item, link: `${router.options.history.base}${item.link}`}))
     
-    const selectUser = (myPrivateKeyID: string) => {
-      void router.push({ name: 'chats', params: {myPrivateKeyID} })
-    }
-    
     return {
       essentialLinks,
       leftDrawerOpen,
       toggleLeftDrawer () {
         leftDrawerOpen.value = !leftDrawerOpen.value
       },
-      uniqueUsers: computed(() => KeysModule.getPrivateKeys),
-      selectUser
     }
   }
 })

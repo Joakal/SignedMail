@@ -223,6 +223,16 @@ export default class Keys extends VuexModule {
   get getDefaults () {
     return this.defaults;
   }
+
+  get getPrivateKeyByChatDefault () {
+    return () => {
+      if (!this.defaults.chat.privateKeyID) {
+        return;
+      }
+
+      return this.getPrivateKeyByKeyID(this.defaults.chat.privateKeyID)
+    }
+  }
 }
 
 store.subscribe(({type}, {keys}) => {
