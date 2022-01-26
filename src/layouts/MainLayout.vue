@@ -94,8 +94,8 @@ const linksList = [
 ];
 
 import { defineComponent, defineAsyncComponent, ref } from 'vue'
-import { URL_KEY } from 'src/util/constants';
 import { useRouter } from 'vue-router'
+import { URL_KEY } from 'src/util/constants';
 import { KeysModule, restoreKeysFromLocalStorage } from 'src/store/keys';
 import { ChatsModule, restoreMessagessFromLocalStorage } from 'src/store/chats';
 

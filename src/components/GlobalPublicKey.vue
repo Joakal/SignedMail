@@ -43,15 +43,13 @@
 <script lang="ts">
 import { defineComponent, ref, computed} from 'vue'
 import { exportFile } from 'quasar'
-import { addToClipboard } from 'src/util/clipboard'
 import QRCode from 'qrcode'
-import { MOBILE_DOMAIN_URL } from 'src/util/constants';
 import { KeysModule } from 'src/store/keys';
+import { addToClipboard } from 'src/util/clipboard'
+import { MOBILE_DOMAIN_URL } from 'src/util/constants';
 
 export default defineComponent({
-  props: {
-    
-  },
+  name: 'GlobalPublicKey',
   setup () {
     const showPublicKey = ref(false);
     const publicKeyOptions = ref(KeysModule.getPublicKeys);
@@ -75,12 +73,12 @@ export default defineComponent({
     }
       
     const publicKeys = computed(() => KeysModule.getPublicKeys);
-    const publicKeyValue = computed(() => publicKeys.value.find(key => key.keyID === publicKeySelected.value?.keyID)?.key || '')
+    const publicKeyValue = computed(() => publicKeySelected.value ? KeysModule.getPublicKeyByKeyID(publicKeySelected.value.keyID)?.key : undefined)
     const publicKeySelected = computed({
       get: () => KeysModule.getPublicKeys.find(key => key.keyID === KeysModule.getDefaults.displayKeyID),
       set: val => KeysModule.changeDefaultDisplay(val?.keyID)
     })
-    const fullUrl = computed(() => `${MOBILE_DOMAIN_URL}add?key=${encodeURIComponent(publicKeyValue.value)}`);
+    const fullUrl = computed(() => publicKeyValue.value ? `${MOBILE_DOMAIN_URL}add?key=${encodeURIComponent(publicKeyValue.value)}` : '');
 
     return {
       showPublicKey,

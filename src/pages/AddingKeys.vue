@@ -10,10 +10,10 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, defineAsyncComponent, ref, Ref, computed, onMounted} from 'vue'
 import { useQuasar } from 'quasar'
-import { useRoute } from 'vue-router'
 import { Key, readKey } from 'openpgp';
+import { defineComponent, defineAsyncComponent, ref, Ref, computed, onMounted} from 'vue'
+import { useRoute } from 'vue-router'
 import { KeysModule } from 'src/store/keys';
 import { CombinedKeyPair } from 'src/util/encryption';
 
@@ -28,12 +28,13 @@ export default defineComponent({
     const route = useRoute()
     const showKeys: Ref<CombinedKeyPair | undefined> = ref(undefined);
 
-    const publicKeys = computed(() => KeysModule.getPublicKeys);
-    const privateKeys = computed(() => KeysModule.getPrivateKeys);
-    const publicKeyExists = (key: Key) => publicKeys.value.find(publicKey => publicKey.keyID === key.getKeyID().toHex())
-    const privateKeyExists = (key: Key) => privateKeys.value.find(privateKey => privateKey.keyID === key.getKeyID().toHex())
 
     const handleAddKey = async (key: string) => {
+      const publicKeys = computed(() => KeysModule.getPublicKeys);
+      const privateKeys = computed(() => KeysModule.getPrivateKeys);
+      const publicKeyExists = (key: Key) => publicKeys.value.find(publicKey => publicKey.keyID === key.getKeyID().toHex())
+      const privateKeyExists = (key: Key) => privateKeys.value.find(privateKey => privateKey.keyID === key.getKeyID().toHex())
+
       try {
         const keyValue = await readKey({armoredKey: key})
         if (keyValue.isPrivate() && privateKeyExists(keyValue) || publicKeyExists(keyValue)) {

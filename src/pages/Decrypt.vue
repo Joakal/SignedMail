@@ -1,8 +1,6 @@
 <template>
   <q-page>
-    <div class="flex flex-center">
-      <div class="text-h4">Decrypt</div>
-    </div>
+    <h1 class="flex flex-center">Decrypt</h1>
     <q-form @submit="handleDecrypt" >
       <div class="fit col">
         <q-input v-model="input" filled label="Input" type="textarea" :disable="!privateKeySelected?.key">

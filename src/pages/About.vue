@@ -8,7 +8,7 @@
     <li>Portable</li>
     <li>Offline</li>
   </ul>
-  <p>I wanted this tool because it's creepy how some companies are monitoring my messages and I'm seeing inappropriate ads based on what I say or see from others in which I have no control over.</p>
+  <p>I wanted this tool because it's creepy how some companies are monitoring my messages and I'm seeing inappropriate ads and feed are being curated based on what I say or see from others in which I have no control over.</p>
   <h2>Powered by</h2>
   <ul>
     <li>PGP</li>
@@ -25,7 +25,7 @@
     <li><a href="https://www.openpgp.org/">OpenPGP</a></li>
   </ul>
   <h3>The codes</h3>
-  <p>You are most welcome to run this application yourself. Please follow the instructions in the README.md on https://github.com/Joakal/SignedMail</p>
-  <p>For help understanding Quasar/Vue/application development, please see: https://quasar.dev/video-tutorials</p>
+  <p>You are most welcome to run this application yourself. Please follow the instructions in the README.md on <a href="https://github.com/Joakal/SignedMail">https://github.com/Joakal/SignedMail</a></p>
+  <p>For help understanding Quasar/Vue/application development, please see: <a href="https://quasar.dev/video-tutorials">https://quasar.dev/video-tutorials</a></p>
   <p>It's encouraged to try to implement this project with PGP as the more people that welcome it, the less likely it is for those message-hungry companies to outlaw/punish users who value encryption over disclosure.</p>
 </template>

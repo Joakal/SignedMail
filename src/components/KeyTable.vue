@@ -6,13 +6,13 @@
       :columns="columns"
       :filter="filter"
       row-key="keyID"
+      :pagination="pagination"
     >
-      <template v-slot:header="props">
-        <q-tr :props="props">
+      <template v-slot:header>
+        <q-tr>
           <q-th
-            v-for="col in props.cols"
+            v-for="col in columns"
             :key="col.name"
-            :props="props"
           >
             {{ col.label }}
           </q-th>
@@ -64,10 +64,9 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, toRef } from 'vue';
+import { defineComponent, defineAsyncComponent, ref, toRef } from 'vue';
 import { QTable, useQuasar, exportFile } from 'quasar';
 import { addToClipboard } from 'src/util/clipboard'
-import ShowKey from './ShowKey.vue';
 
 const columns: QTable['columns'] = [{
   name: 'keyID',
@@ -86,8 +85,8 @@ const columns: QTable['columns'] = [{
 }];
 
 export default defineComponent({
-  components: { ShowKey },
   name: 'KeyTable',
+  components: { ShowKey: defineAsyncComponent(() => import('./ShowKey.vue')), },
   props: {
     title: {
       type: String,
@@ -124,14 +123,11 @@ export default defineComponent({
 
     return {
       filter: ref(''),
-      initialPagination: {
-        sortBy: '',
-        descending: false,
-        page: 1,
-        rowsPerPage: 10
-      },
       columns,
       fileName,
+      pagination: {
+        rowsPerPage: 25
+      },
       confirmDeletion,
       addToClipboard,
       exportFile

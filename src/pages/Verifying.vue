@@ -1,8 +1,6 @@
 <template>
   <q-page>
-    <div class="flex flex-center">
-      <div class="text-h4">Verifying</div>
-    </div>
+    <h1 class="flex flex-center">Verifying</h1>
     <q-form @submit="handleVerifying" >
       <div class="fit col">
         <q-input v-model="input" filled type="textarea" :rules="[val => !!val || 'Field is required']" label="Message" :disable="!publicKeySelected?.key">

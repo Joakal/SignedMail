@@ -5,9 +5,9 @@
         404
       </div>
 
-      <div class="text-h2" style="opacity:.4">
+      <h2 style="opacity:.4">
         Oops. Nothing here...
-      </div>
+      </h2>
 
       <q-btn
         class="q-mt-xl"

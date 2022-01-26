@@ -14,13 +14,13 @@
 </template>
 
 <script lang="ts">
-import { defineComponent,  PropType } from 'vue'
-import { CombinedKeyPair } from 'src/util/encryption';
 import { exportFile } from 'quasar';
+import { defineComponent, defineAsyncComponent, PropType } from 'vue'
+import { CombinedKeyPair } from 'src/util/encryption';
 import { addToClipboard } from 'src/util/clipboard'
-import ShowKey from './ShowKey.vue';
+
 export default defineComponent({
-  components: { ShowKey },
+  components: { ShowKey: defineAsyncComponent(() => import('./ShowKey.vue')), },
   name: 'ShowKeys',
   props: {
     keys: {

@@ -9,7 +9,7 @@
       <div v-else-if="!currentKeyValue">
         <span>Select Inbox below</span>
       </div>
-      <div>
+      <div v-else>
         <q-item 
           clickable
           tag="a"

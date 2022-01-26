@@ -1,7 +1,22 @@
 <template>
   <q-page>
-    <q-banner class="bg-primary text-white">
-      <q-btn round icon="arrow_circle_left" @click="goBack" /> {{publicKey?.userID}}
+    <q-banner class="bg-primary text-white row full-width">
+      <div class="fit row justify-between items-center">
+        <div>
+          <q-btn round icon="arrow_circle_left" @click="goBack" />
+        </div>
+        <div>
+          {{publicKey?.userID}}
+        </div>
+        <div>
+          <q-btn round icon="help">
+            <q-tooltip class="text-subtitle1" style="max-width: 70vw">
+              Write a message and it will be automatically encrypted with your private key and copied to your clipboard.<br />
+              Add their message and it will be automatically decrypted with your private key and available here.
+            </q-tooltip>
+          </q-btn>
+        </div>
+      </div>
     </q-banner>
     <span v-if="!publicKey">
       No public key could be found. Have you added their public key?
@@ -10,7 +25,7 @@
       There are messages that are currently encrypted.
       <q-btn color="primary" @click="retryDecryption">Try decrypting again</q-btn>
     </span>
-    <div v-else style="width: 100%; max-width: 400px">
+    <div v-else style="width: 100%;">
       <q-chat-message
         v-for="(chat, index) in chats" 
         :key="index"
@@ -38,7 +53,7 @@
           </q-icon>
         </template>
       </q-chat-message>
-      <q-input bottom-slots v-model="inputChat" type="textarea">
+      <q-input bottom-slots v-model="inputChat" type="textarea" hint="Write your message or add their PGP Message here">
         <template v-slot:append>
           <q-icon v-if="inputChat !== ''" name="close" @click="inputChat = ''" class="cursor-pointer" />
         </template>
@@ -52,14 +67,13 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed, onMounted } from 'vue';
 import { useQuasar } from 'quasar';
-import { useRoute, useRouter } from 'vue-router';
 import { readMessage } from 'openpgp';
-import { myCreateMessage, processMessage } from 'src/util/chatting'
-import { ChatsModule } from 'src/store/chats';
+import { defineComponent, ref, computed, onMounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
+import { myCreateMessage, processMessage, processMessagesToChats } from 'src/util/chatting'
 import { addToClipboard } from 'src/util/clipboard'
-import { processMessagesToChats } from 'src/util/chatting';
+import { ChatsModule } from 'src/store/chats';
 import { KeysModule } from 'src/store/keys';
 
 const isValidMessage = async (message: string) => {
@@ -134,7 +148,7 @@ export default defineComponent({
 
     const encryptMessage = async (text?: string) => {
       const { theirEncryptedMessage, chat, message } = await myCreateMessage(text ? text : inputChat.value, theirPublicKeyID.value, myPrivateKeyID.value)
-      await addToClipboard({label: 'Encrypted message copied to clipboard', value: theirEncryptedMessage})
+      await addToClipboard({label: 'Encrypted message', value: theirEncryptedMessage})
       return { chat, message }
     }
 

@@ -1,7 +1,19 @@
 <template>
   <q-page>
     <q-banner class="bg-primary text-white">
-      {{privateKey?.userID}} Chats
+      <div class="fit row justify-between items-center">
+        <div />
+        <div>
+          {{privateKey?.userID}} Chats 
+        </div>
+        <div>
+          <q-btn round icon="help">
+            <q-tooltip class="text-subtitle1" style="max-width: 70vw">
+              Once you start a conversation on the device, it will be listed here
+            </q-tooltip>
+          </q-btn>
+        </div>
+      </div>
     </q-banner>
     <span v-if="hasEncryptedMessages">
       There are messages that are currently encrypted.
@@ -20,10 +32,10 @@
         @click="rowClick(chat.detail.theirPublicKeyID)"
         >
         <q-item-section>
-          <span class="text-h6">
+          <span>
             {{chat.detail.userID}}
           </span>
-          <span class="text-subtitle1">
+          <span>
             {{chat.detail.createdDate}}
           </span>
         </q-item-section>
@@ -54,34 +66,53 @@
     </div>
     <div class="row q-gutter-md">
       <q-btn color="primary" label="Start chat" @click="startChat" :disable="!publicKeySelected" />
+      <q-btn color="secondary" label="New Public Key" @click="addNewKey = true"  />
     </div>
+    <q-dialog v-model="addNewKey">
+      <q-card style="width: 700px; max-width: 80vw;">
+        <q-card-section>
+          <q-input v-model="publicKeyValue" filled type="textarea" label="Public or Private Key" />
+          <q-btn color="primary" label="Add Key" @click="handleAddKey" />
+          <div class="q-pa-md row" v-if="showKeys">
+            <ShowKeys :keys="showKeys" />
+          </div>
+        </q-card-section>
+      </q-card>
+    </q-dialog>
   </q-page>
 </template>
 
 <script lang="ts">
 import { useQuasar } from 'quasar';
-import { defineComponent, ref, Ref, computed, onMounted, watch } from 'vue';
+import { Key, readKey } from 'openpgp';
+import { defineComponent, defineAsyncComponent, ref, Ref, computed, onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ChatsModule } from 'src/store/chats';
 import { IKeyRecord, KeysModule } from 'src/store/keys';
 import { processMessagesToChats } from 'src/util/chatting';
+import { CombinedKeyPair } from 'src/util/encryption';
 
 export default defineComponent({
   name: 'Chats',
+  components: {
+    ShowKeys: defineAsyncComponent(() => import('components/ShowKeys.vue'))
+  },
   setup() {
     const $q = useQuasar();
     const router = useRouter();
     const route = useRoute();
     const myPrivateKeyID = ref('');
+    const publicKeyValue = ref('');
+    const addNewKey = ref(false);
     const publicKeySelected: Ref<IKeyRecord | undefined> = ref();
     const publicKeyOptions: Ref<IKeyRecord[]> = ref([]);
     const publicKeys: Ref<IKeyRecord[]> = ref([]);
+    const showKeys: Ref<CombinedKeyPair | undefined> = ref(undefined);
 
     const chats = computed(() => ChatsModule.getChatsByPrivateKeyID(myPrivateKeyID.value));
     const uniqueChats = computed(() => ChatsModule.getUniqueChatsByPrivateKeyID(myPrivateKeyID.value));
     const messages = computed(() => ChatsModule.getMessagesByPrivateKeyID(myPrivateKeyID.value));
     const privateKey = computed(() => KeysModule.getPrivateKeyByKeyID(myPrivateKeyID.value));
-
     
     const publicKeyFilterFn = (inputValue: string, doneFn: (callBackFn: () => void) => void) => {
       if (inputValue === '') {
@@ -111,6 +142,33 @@ export default defineComponent({
         }
       }
     }
+    
+    const handleAddKey = async () => {
+      const publicKeys = computed(() => KeysModule.getPublicKeys);
+      const privateKeys = computed(() => KeysModule.getPrivateKeys);
+      const publicKeyExists = (key: Key) => publicKeys.value.find(publicKey => publicKey.keyID === key.getKeyID().toHex())
+      const privateKeyExists = (key: Key) => privateKeys.value.find(privateKey => privateKey.keyID === key.getKeyID().toHex())
+      
+      try {
+        const keyValue = await readKey({armoredKey: publicKeyValue.value})
+        if (keyValue.isPrivate() && privateKeyExists(keyValue) || publicKeyExists(keyValue)) {
+          $q.notify({
+            type: 'negative',
+            message: 'This key already exists locally',
+          });
+        } else {
+          await KeysModule.importPublicKey({key: keyValue});
+        }
+        
+        showKeys.value = { publicKey: keyValue };
+      } catch (error: unknown) {
+        const {message} = error as Error;
+        $q.notify({
+          type: 'negative',
+          message,
+        });
+      }
+    };
 
     onMounted(async () => {
       if (route.params.myPrivateKeyID) {
@@ -129,6 +187,10 @@ export default defineComponent({
     });
 
     return {
+      addNewKey,
+      publicKeyValue,
+      showKeys,
+      handleAddKey,
       hasEncryptedMessages: computed(() => ChatsModule.hasEncryptedMessages(myPrivateKeyID.value)),
       uniqueChats,
       rowClick: (theirPublicKeyID: string) => router.push({ name: 'chat' , params: { theirPublicKeyID } }),

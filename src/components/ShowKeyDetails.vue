@@ -71,8 +71,9 @@
 <script lang="ts">
 import { defineComponent,  PropType, ref, Ref, onMounted, watch } from 'vue'
 import { Key, readKey } from 'openpgp';
+
 export default defineComponent({
-  name: 'ShowKeys',
+  name: 'ShowKeyDetails',
   props: {
     keyValue: {
       type: Object as PropType<Key>,
@@ -99,15 +100,10 @@ export default defineComponent({
 
     watch(keyRead, async () => {
       if (keyRead.value) {
-        const keyValue = await keyRead.value.getEncryptionKey();
-        encryptionKeyID.value = keyValue.getKeyID().toHex();
-      }
-    });
-
-    watch(keyRead, async () => {
-      if (keyRead.value) {
-        const keyValue = await keyRead.value.getSigningKey();
-        signingKeyID.value = keyValue.getKeyID().toHex();
+        const encryptionKey = await keyRead.value.getEncryptionKey();
+        const signingKey = await keyRead.value.getSigningKey();
+        encryptionKeyID.value = encryptionKey.getKeyID().toHex();
+        signingKeyID.value = signingKey.getKeyID().toHex();
       }
     });
 

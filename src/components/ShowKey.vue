@@ -21,12 +21,12 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, computed } from 'vue'
 import { exportFile } from 'quasar';
+import { defineComponent, defineAsyncComponent, computed } from 'vue'
 import { addToClipboard } from 'src/util/clipboard'
-import ShowKeyDetails from './ShowKeyDetails.vue';
+
 export default defineComponent({
-  components: { ShowKeyDetails },
+  components: { ShowKeyDetails: defineAsyncComponent(() => import('./ShowKeyDetails.vue')), },
   name: 'ShowKey',
   props: {
     keyValue: {

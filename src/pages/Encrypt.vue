@@ -1,8 +1,6 @@
 <template>
   <q-page>
-    <div class="flex flex-center">
-      <div class="text-h4">Encrypt</div>
-    </div>
+    <h1 class="flex flex-center">Encrypt</h1>
     <q-form @submit="handleEncrypt" >
       <div class="fit col">
         <q-input v-model="input" filled :type="isPwd ? 'password' : 'textarea'" label="Input" :disable="!publicKeySelected?.key">

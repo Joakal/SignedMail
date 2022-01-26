@@ -48,10 +48,10 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, Ref } from 'vue'
 import { useQuasar } from 'quasar'
-import { createKeys, CombinedKeyPair, emailRegex, createTypeOptions, createCurveOptions } from 'src/util/encryption';
 import { EllipticCurveName, KeyOptions } from 'openpgp';
+import { defineComponent, ref, Ref } from 'vue'
+import { createKeys, CombinedKeyPair, emailRegex, createTypeOptions, createCurveOptions } from 'src/util/encryption';
 import { KeysModule } from 'src/store/keys';
 export default defineComponent({
   name: 'NewKey',
@@ -62,9 +62,9 @@ export default defineComponent({
     const $q = useQuasar()
 
     const hidePassphrase = ref(true);
-    const name = ref('test')
-    const email = ref('test@test.com')
-    const passphrase = ref('test')
+    const name = ref('')
+    const email = ref('')
+    const passphrase = ref('')
     const expanded = ref(false);
     const type: Ref<KeyOptions['type']> = ref('ecc');
     const curve: Ref<EllipticCurveName> = ref('curve25519');
