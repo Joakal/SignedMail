@@ -1,5 +1,5 @@
-import { createMessage, decrypt, decryptKey, encrypt, readKey, readMessage, readPrivateKey } from 'openpgp';
-import { requestPassphrase } from 'app/src/util/encryption'
+import { createMessage, decrypt, encrypt, readKey, readMessage } from 'openpgp';
+import { resolvePrivateKey } from 'app/src/util/encryption'
 import { KeysModule } from 'src/store/keys';
 import { ChatsModule, IChat, IMessage, verificationKeys } from 'src/store/chats';
 
@@ -36,17 +36,7 @@ export async function myCreateMessage(input: string, theirPublicKeyID: string, m
     throw new Error(`Could not find the private key for ${myPrivateKeyID}`);
   }
 
-  const resolvedPrivateKey = await readPrivateKey({ armoredKey: myPrivateKey.key });
-  const passphrase = await requestPassphrase({username: resolvedPrivateKey.getUserIDs().join(', ')});
-
-  if (passphrase === null) {
-    throw new Error('Passphrase is required');
-  }
-  
-  const decryptedPrivateKey = await decryptKey({
-    privateKey: resolvedPrivateKey,
-    passphrase
-  });
+  const decryptedPrivateKey = await resolvePrivateKey(myPrivateKey.key)
 
   const myPublicKey = decryptedPrivateKey.toPublic();
   
@@ -111,17 +101,7 @@ export async function processMessage(encryptedMessage: string) {
     throw new Error(`Could not find the private key for ${myPrivateKeyIDs[0]}`);
   }
 
-  const resolvedPrivateKey = await readPrivateKey({ armoredKey: myPrivateKey.key });
-  const passphrase = await requestPassphrase({username: resolvedPrivateKey.getUserIDs().join(', ')});
-
-  if (passphrase === null) {
-    return ''; 
-  }
-  
-  const decryptedPrivateKey = await decryptKey({
-    privateKey: resolvedPrivateKey,
-    passphrase
-  });
+  const decryptedPrivateKey = await resolvePrivateKey(myPrivateKey.key)
 
   const decryptedResult = await decrypt({
     message: readingMessage,
@@ -193,17 +173,7 @@ export async function processMessagesToChats(myPrivateKeyID: string): Promise<vo
     throw new Error(`Could not find the private key for ${myPrivateKeyID}`);
   }
 
-  const resolvedPrivateKey = await readPrivateKey({ armoredKey: myPrivateKey.key });
-  const passphrase = await requestPassphrase({username: resolvedPrivateKey.getUserIDs().join(', ')});
-
-  if (passphrase === null) {
-    throw new Error('Passphrase is required');
-  }
-  
-  const decryptedPrivateKey = await decryptKey({
-    privateKey: resolvedPrivateKey,
-    passphrase
-  });
+  const decryptedPrivateKey = await resolvePrivateKey(myPrivateKey.key)
 
   const chats = await Promise.all(messages.map(async message => {
     let verification: verificationKeys;
@@ -240,7 +210,7 @@ export async function processMessagesToChats(myPrivateKeyID: string): Promise<vo
     }
 
     // Lets determine if the message was from us
-    if (verification === 'verified' && resolvedPrivateKey.toPublic().getKeyID().toHex() === theirPublicKeyID) {
+    if (verification === 'verified' && decryptedPrivateKey.toPublic().getKeyID().toHex() === theirPublicKeyID) {
       verification = 'self';
       const messageObject = JSON.parse(decryptedMessage) as IMyChat;
 

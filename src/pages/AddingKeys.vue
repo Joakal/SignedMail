@@ -11,11 +11,11 @@
 
 <script lang="ts">
 import { useQuasar } from 'quasar'
-import { Key, readKey } from 'openpgp';
+import { Key, } from 'openpgp';
 import { defineComponent, defineAsyncComponent, ref, Ref, computed, onMounted} from 'vue'
 import { useRoute } from 'vue-router'
 import { KeysModule } from 'src/store/keys';
-import { CombinedKeyPair } from 'src/util/encryption';
+import { CombinedKeyPair, myReadKey } from 'src/util/encryption';
 
 export default defineComponent({
   name: 'AddingKeys',
@@ -35,25 +35,21 @@ export default defineComponent({
       const publicKeyExists = (key: Key) => publicKeys.value.find(publicKey => publicKey.keyID === key.getKeyID().toHex())
       const privateKeyExists = (key: Key) => privateKeys.value.find(privateKey => privateKey.keyID === key.getKeyID().toHex())
 
-      try {
-        const keyValue = await readKey({armoredKey: key})
-        if (keyValue.isPrivate() && privateKeyExists(keyValue) || publicKeyExists(keyValue)) {
-          $q.notify({
-            type: 'negative',
-            message: 'This key already exists locally',
-          });
-        } else {
-          await KeysModule.importPublicKey({key: keyValue});
-        }
-        
-        showKeys.value = { publicKey: keyValue };
-      } catch (error: unknown) {
-        const {message} = error as Error;
+      const keyValue = await myReadKey({armoredKey: key})
+      if (!keyValue) {
+        return;
+      }
+
+      if (keyValue.isPrivate() && privateKeyExists(keyValue) || publicKeyExists(keyValue)) {
         $q.notify({
           type: 'negative',
-          message,
+          message: 'This key already exists locally',
         });
+      } else {
+        await KeysModule.importPublicKey({key: keyValue});
       }
+      
+      showKeys.value = { publicKey: keyValue };
     };
 
     onMounted(async () => {
