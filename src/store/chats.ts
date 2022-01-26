@@ -6,7 +6,7 @@ export interface IEncryptedDetail {
   myPrivateKeyID: string;
 }
 
-export type verificationKeys = 'verified' | 'failed' | 'not_found' | 'self';
+export type verificationKeys = 'verified' | 'failed' | 'not_found' | 'self' | 'invalid_pgp_message';
 
 // By Design, PGP does not expose the below details, lets do the same
 export interface IUnencryptedDetail extends IEncryptedDetail {

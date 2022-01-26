@@ -73,10 +73,10 @@
 
 <script lang="ts">
 import { useQuasar } from 'quasar';
-import { readMessage } from 'openpgp';
 import { defineComponent, ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { myCreateMessage, processMessage, processMessagesToChats } from 'src/util/chatting'
+import { myReadMessage } from 'src/util/encryption'
 import { addToClipboard } from 'src/util/clipboard'
 import { ChatsModule } from 'src/store/chats';
 import { KeysModule } from 'src/store/keys';
@@ -86,9 +86,9 @@ dayjs.extend(relativeTime);
 
 const isValidMessage = async (message: string) => {
   try {
-    await readMessage({ armoredMessage: message });
+    await myReadMessage({ armoredMessage: message });
     return true;
-  } catch {
+  } catch (error: unknown) {
     return false;
   }
 }

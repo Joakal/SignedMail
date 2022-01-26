@@ -1,5 +1,5 @@
-import { createMessage, decrypt, encrypt, readKey, readMessage } from 'openpgp';
-import { resolvePrivateKey } from 'app/src/util/encryption'
+import { createMessage, decrypt, encrypt, readKey } from 'openpgp';
+import { myReadMessage, resolvePrivateKey } from 'app/src/util/encryption'
 import { KeysModule } from 'src/store/keys';
 import { ChatsModule, IChat, IMessage, verificationKeys } from 'src/store/chats';
 
@@ -52,7 +52,11 @@ export async function myCreateMessage(input: string, theirPublicKeyID: string, m
     signingKeys: decryptedPrivateKey
   });
 
-  const readingMessage = await readMessage({armoredMessage: myEncryptedMessage});
+  const readingMessage = await myReadMessage({armoredMessage: myEncryptedMessage});
+  if (!readingMessage) {
+    console.error('Could not read message', readingMessage)
+    throw new Error('Could not read message');
+  }
 
   const decryptedResult = await decrypt({
     message: readingMessage,
@@ -90,7 +94,11 @@ export async function processMessage(encryptedMessage: string) {
 
   let verification;
 
-  const readingMessage = await readMessage({armoredMessage: encryptedMessage});
+  const readingMessage = await myReadMessage({armoredMessage: encryptedMessage});
+  if (!readingMessage) {
+    console.error('Not a valid pgp message', encryptedMessage)
+    throw new Error('Not a valid pgp message')
+  }
 
   const myPrivateKeyIDs = readingMessage.getEncryptionKeyIDs().map(record => record.toHex())
   const myPrivateKeyID = myPrivateKeyIDs[0];
@@ -119,7 +127,12 @@ export async function processMessage(encryptedMessage: string) {
     verification = 'not_found';
   } else {
     const theirResolvedPublicKey = await readKey({armoredKey: theirPublicKey.key});
-    const readingMessageSecond = await readMessage({armoredMessage: encryptedMessage}); // Need to read again due to pgp limitation https://github.com/openpgpjs/openpgpjs/issues/1461
+    const readingMessageSecond = await myReadMessage({armoredMessage: encryptedMessage}); // Need to read again due to pgp limitation https://github.com/openpgpjs/openpgpjs/issues/1461
+    if (!readingMessageSecond) {
+      console.error('Not a valid pgp message', encryptedMessage)
+      throw new Error('Not a valid pgp message')
+    }
+
     const decryptedVerifiedResult = await decrypt({
       message: readingMessageSecond,
       decryptionKeys: decryptedPrivateKey,
@@ -178,7 +191,13 @@ export async function processMessagesToChats(myPrivateKeyID: string): Promise<vo
   const chats = await Promise.all(messages.map(async message => {
     let verification: verificationKeys;
 
-    const readingMessage = await readMessage({armoredMessage: message.message});
+    const readingMessage = await myReadMessage({armoredMessage: message.message});
+
+    if (!readingMessage) {
+      console.error('Not a valid pgp message', message.message)
+      throw new Error('Not a valid pgp message')
+    }
+
     const decryptedResult = await decrypt({
       message: readingMessage,
       decryptionKeys: decryptedPrivateKey,
@@ -197,7 +216,11 @@ export async function processMessagesToChats(myPrivateKeyID: string): Promise<vo
       verification = 'not_found';
     } else {
       const theirResolvedPublicKey = await readKey({armoredKey: theirPublicKey.key});
-      const readingMessageSecond = await readMessage({armoredMessage: message.message}); // Need to read again due to pgp limitation https://github.com/openpgpjs/openpgpjs/issues/1461
+      const readingMessageSecond = await myReadMessage({armoredMessage: message.message}); // Need to read again due to pgp limitation https://github.com/openpgpjs/openpgpjs/issues/1461
+      if (!readingMessageSecond) {
+        console.error('Not a valid pgp message', message.message)
+        throw new Error('Not a valid pgp message')
+      }
 
       const decryptedVerifiedResult = await decrypt({
         message: readingMessageSecond,

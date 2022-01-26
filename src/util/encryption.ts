@@ -24,7 +24,6 @@ export const createTypeOptions = ['ecc', 'rsa']
 export const createCurveOptions = ['ed25519', 'curve25519', 'p256', 'p384', 'p521', 'secp256k1', 'brainpoolP256r1', 'brainpoolP384r1', 'brainpoolP512r1']
 
 function friendlyPgpEncryptionWrapper(error: unknown) {
-  console.error('Friendly error', error);
   const {message} = error as Error;
   if (!message) {
     throw new Error('An uncaught error appeared');
@@ -79,7 +78,7 @@ export async function encryptMessage(body: string, publicKey: string, privateKey
 export async function decryptMessage(encryptedBody: string, privateKey: string, publicKey?: string): Promise<IDecryptionResult> {
   const decryptedPrivateKey = await resolvePrivateKey(privateKey)
 
-  const message = await readMessage({
+  const message = await myReadMessage({
       armoredMessage: encryptedBody // parse armored message
   });
 
@@ -169,5 +168,15 @@ export const myReadKey = async (options: ArmoredOptions) => {
   } catch (error: unknown) {
     friendlyPgpEncryptionWrapper(error)
     return;
+  }
+}
+
+export const myReadMessage = async ({armoredMessage}: {armoredMessage: string}) => {
+  try { 
+    return readMessage({
+      armoredMessage // parse armored message
+    });
+  } catch (error: unknown) {
+    friendlyPgpEncryptionWrapper(error)
   }
 }
