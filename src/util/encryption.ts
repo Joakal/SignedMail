@@ -165,8 +165,7 @@ type ArmoredOptions = {
 
 export const myReadKey = async (options: ArmoredOptions) => {
   try { 
-    const something = await readKey(options)
-    return something;
+    return readKey(options)
   } catch (error: unknown) {
     friendlyPgpEncryptionWrapper(error)
     return;
