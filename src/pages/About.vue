@@ -28,4 +28,6 @@
   <p>You are most welcome to run this application yourself. Please follow the instructions in the README.md on <a href="https://github.com/Joakal/SignedMail">https://github.com/Joakal/SignedMail</a></p>
   <p>For help understanding Quasar/Vue/application development, please see: <a href="https://quasar.dev/video-tutorials">https://quasar.dev/video-tutorials</a></p>
   <p>It's encouraged to try to implement this project with PGP as the more people that welcome it, the less likely it is for those message-hungry companies to outlaw/punish users who value encryption over disclosure.</p>
+  <h3>Need more help, got feedback or questions?</h3>
+  <p>Join the discussions here: <a href="https://github.com/Joakal/SignedMail/discussions">https://github.com/Joakal/SignedMail/discussions</a></p>
 </template>

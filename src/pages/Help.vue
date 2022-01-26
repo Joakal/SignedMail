@@ -22,4 +22,6 @@
     <li>Tell people to use the new public key instead.</li>
     <li>Gain that one step to understanding that security is hard.</li>
   </ol>
+  <h3>Need more help, got feedback or questions?</h3>
+  <p>Join the discussions here: <a href="https://github.com/Joakal/SignedMail/discussions">https://github.com/Joakal/SignedMail/discussions</a></p>
 </template>
