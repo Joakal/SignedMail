@@ -62,15 +62,12 @@ export default defineComponent({
     const title = ref('');
 
     onMounted(async () => {
-      console.log('WOoo onMounted', privateKeyString.value);
       resolvedPrivateKey.value = await readPrivateKey({ armoredKey: privateKeyString.value });
       const username = resolvedPrivateKey.value.getUserIDs().join(', ');
       title.value = `Passphrase for ${username}`
-      console.log('WOoo', username, resolvedPrivateKey.value);
     })
 
     const onOKClick = async () => {
-      console.log('onOKClick');
       if (resolvedPrivateKey.value) {
         try {
           const decryptedPrivateKey = await decryptKey({

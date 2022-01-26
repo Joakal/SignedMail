@@ -158,7 +158,6 @@ export default defineComponent({
         const {message} = error as Error;
         handleAddKeyError.value = message;
       }
-      console.log('why is a return happening', keyValue)
       if (!keyValue) {
         return;
       }
