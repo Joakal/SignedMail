@@ -23,15 +23,12 @@ export const emailRegex = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(
 export const createTypeOptions = ['ecc', 'rsa']
 export const createCurveOptions = ['ed25519', 'curve25519', 'p256', 'p384', 'p521', 'secp256k1', 'brainpoolP256r1', 'brainpoolP384r1', 'brainpoolP512r1']
 
-function friendlyPgpEncryptionWrapper(error: unknown) {
-  const {message} = error as Error;
-  if (!message) {
-    throw new Error('An uncaught error appeared');
-  } else if (message === 'Misformed armored text') {
-    throw new Error('This is not a valid PGP message or key');
+function friendlyPgpEncryptionWrapper(message: string) {
+  if (message === 'Misformed armored text') {
+    return 'This is not a valid PGP message or key';
   }
-  
-  throw new Error(message);
+
+  return message;
 }
 
 export async function createKeys(name: string, email: string, passphrase: string, type: KeyOptions['type'] = 'ecc', curve: EllipticCurveName = 'curve25519', userIDs: UserID[] = []): Promise<CombinedKeyPair> {
@@ -59,7 +56,7 @@ export async function resolvePrivateKey(privateKeyString: string) {
 
 
 export async function encryptMessage(body: string, publicKey: string, privateKey?: string): Promise<string> {
-  const resolvedPublicKey = await readKey({ armoredKey: publicKey });
+  const resolvedPublicKey = await myReadKey({ armoredKey: publicKey });
   const message = await createMessage({ text: body });
   const encryptBody = {
     message,
@@ -88,7 +85,7 @@ export async function decryptMessage(encryptedBody: string, privateKey: string, 
   } as DecryptOptions
 
   if (publicKey) {
-    const resolvedPublicKey = await readKey({ armoredKey: publicKey });
+    const resolvedPublicKey = await myReadKey({ armoredKey: publicKey });
 
     decryptBody.expectSigned = true;
     decryptBody.verificationKeys = resolvedPublicKey;
@@ -120,7 +117,7 @@ export async function signMessage(body: string, privateKey: string): Promise<str
 }
 
 export async function verifyMessage(body: string, publicKey: string, detachedSignature: string): Promise<boolean> {
-  const resolvedPublicKey = await readKey({ armoredKey: publicKey });
+  const resolvedPublicKey = await myReadKey({ armoredKey: publicKey });
   const message = await createMessage({ text: body });
   const signature = await readSignature({
       armoredSignature: detachedSignature // parse detached signature
@@ -141,19 +138,19 @@ export async function verifyMessage(body: string, publicKey: string, detachedSig
 }
 
 export async function getPrivateKeyId(key: string) {
-  const keys = await readKey({ armoredKey: key })
+  const keys = await myReadKey({ armoredKey: key })
   const encryptionKey =  await keys.getEncryptionKey();
   return encryptionKey.getKeyID().toHex();
 }
 
 export async function getPublicKeyId(key: string) {
-  const keys = await readKey({ armoredKey: key })
+  const keys = await myReadKey({ armoredKey: key })
   const signingKey =  await keys.getSigningKey();
   return signingKey.getKeyID().toHex();
 }
 
 export async function getUserIDs(key: string) {
-  const keys = await readKey({ armoredKey: key })
+  const keys = await myReadKey({ armoredKey: key })
   return keys.users.map(user => user.userID?.userID);
 }
 
@@ -164,19 +161,20 @@ type ArmoredOptions = {
 
 export const myReadKey = async (options: ArmoredOptions) => {
   try { 
-    return readKey(options)
+    return await readKey(options)
   } catch (error: unknown) {
-    friendlyPgpEncryptionWrapper(error)
-    return;
+    const {message} = error as Error;
+    throw new Error(friendlyPgpEncryptionWrapper(message))
   }
 }
 
 export const myReadMessage = async ({armoredMessage}: {armoredMessage: string}) => {
   try { 
-    return readMessage({
+    return await readMessage({
       armoredMessage // parse armored message
     });
   } catch (error: unknown) {
-    friendlyPgpEncryptionWrapper(error)
+    const {message} = error as Error;
+    throw new Error(friendlyPgpEncryptionWrapper(message))
   }
 }

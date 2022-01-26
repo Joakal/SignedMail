@@ -70,7 +70,8 @@
 
 <script lang="ts">
 import { defineComponent,  PropType, ref, Ref, onMounted, watch } from 'vue'
-import { Key, readKey } from 'openpgp';
+import { Key } from 'openpgp';
+import { myReadKey } from 'src/util/encryption';
 
 export default defineComponent({
   name: 'ShowKeyDetails',
@@ -94,7 +95,7 @@ export default defineComponent({
       if (keyValue) {
         keyRead.value = keyValue
       } else if (plainKey) {
-        keyRead.value = await readKey({armoredKey: plainKey});
+        keyRead.value = await myReadKey({armoredKey: plainKey});
       }
     })
 

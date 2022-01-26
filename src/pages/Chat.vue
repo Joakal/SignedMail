@@ -58,9 +58,13 @@
           </span>
         </template>
       </q-chat-message>
-      <q-input bottom-slots v-model="inputChat" type="textarea" hint="Write your message or add their PGP Message here">
+      <q-input bottom-slots v-model="inputChat" outlined type="textarea" hint="Write your message" :error="!!inputChatError.length" :error-message="inputChatError">
         <template v-slot:append>
           <q-icon v-if="inputChat !== ''" name="close" @click="inputChat = ''" class="cursor-pointer" />
+        </template>
+
+        <template v-slot:before>
+          <q-btn round dense flat icon="mail" @click="handleTheirMessage" />
         </template>
 
         <template v-slot:after>
@@ -76,22 +80,12 @@ import { useQuasar } from 'quasar';
 import { defineComponent, ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { myCreateMessage, processMessage, processMessagesToChats } from 'src/util/chatting'
-import { myReadMessage } from 'src/util/encryption'
 import { addToClipboard } from 'src/util/clipboard'
 import { ChatsModule } from 'src/store/chats';
 import { KeysModule } from 'src/store/keys';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 dayjs.extend(relativeTime);
-
-const isValidMessage = async (message: string) => {
-  try {
-    await myReadMessage({ armoredMessage: message });
-    return true;
-  } catch (error: unknown) {
-    return false;
-  }
-}
 
 const timestamp = (dateObj: Date | undefined) => {
   return dateObj ? dayjs().to(dayjs(dateObj)) : undefined
@@ -106,6 +100,7 @@ export default defineComponent({
     const myPrivateKeyID = ref('');
     const theirPublicKeyID = ref('');
     const inputChat = ref('');
+    const inputChatError = ref('')
 
     const chats = computed(() => ChatsModule.getChatsByPrivateKeyIDAndPublicKeyID(myPrivateKeyID.value, theirPublicKeyID.value));
     const messages = computed(() => ChatsModule.getMessagesByPrivateKeyID(myPrivateKeyID.value));
@@ -136,26 +131,28 @@ export default defineComponent({
       }
     })
 
-    const submitMessage = async () => {
-      // Determine if message () or plain text (from me to them)
-      const isMessage = await isValidMessage(inputChat.value)
-      
-      try {
-        if (isMessage) {
-          await processMessage(inputChat.value)
-        } else {
-          const { chat, message } = await encryptMessage();
-          ChatsModule.addChat({chat})
-          ChatsModule.addMessage({message})
-        }
+    const handleTheirMessage = async () => {  
+      inputChatError.value = '';   
+      try { 
+        await processMessage(inputChat.value)
+        inputChat.value = '';
       } catch (exception: unknown) {
         const error = exception as Error;
-        $q.notify({
-          type: 'negative',
-          message: `Could not process message. Reason: ${error.message}`,
-        });
+        inputChatError.value = `Could not process message. Reason: ${error.message}`;
       }
-      inputChat.value = '';
+    }
+
+    const submitMessage = async () => {
+      inputChatError.value = '';
+      try {
+        const { chat, message } = await encryptMessage();
+        ChatsModule.addChat({chat})
+        ChatsModule.addMessage({message})
+        inputChat.value = '';
+      } catch (exception: unknown) {
+        const error = exception as Error;
+        inputChatError.value = `Could not process message. Reason: ${error.message}`;
+      }
     }
 
     const encryptMessage = async (text?: string) => {
@@ -167,12 +164,14 @@ export default defineComponent({
     return {
       hasEncryptedMessages: computed(() => ChatsModule.hasEncryptedMessages(myPrivateKeyID.value)),
       inputChat,
+      inputChatError,
       chats,
       theirPublicKeyID,
       publicKey,
       timestamp,
       rowClick: (id: string) => router.push({ name: 'history' , params: { id } }),
       clickMessage: encryptMessage,
+      handleTheirMessage,
       submitMessage,
       retryDecryption: async () => await processInboxChange(),
       goBack: () => router.push({ name: 'chats' , params: { myPrivateKeyID: myPrivateKeyID.value } }),

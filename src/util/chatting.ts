@@ -1,5 +1,5 @@
-import { createMessage, decrypt, encrypt, readKey } from 'openpgp';
-import { myReadMessage, resolvePrivateKey } from 'app/src/util/encryption'
+import { createMessage, decrypt, encrypt } from 'openpgp';
+import { myReadKey, myReadMessage, resolvePrivateKey } from 'app/src/util/encryption'
 import { KeysModule } from 'src/store/keys';
 import { ChatsModule, IChat, IMessage, verificationKeys } from 'src/store/chats';
 
@@ -28,7 +28,7 @@ export async function myCreateMessage(input: string, theirPublicKeyID: string, m
     throw new Error(`Could not find the public key for ${theirPublicKeyID}`);
   }
 
-  const theirResolvedPublicKey = await readKey({armoredKey: theirPublicKey.key});
+  const theirResolvedPublicKey = await myReadKey({armoredKey: theirPublicKey.key});
 
   const myPrivateKey = KeysModule.getPrivateKeys.find(privateKey => privateKey.keyID === myPrivateKeyID);
 
@@ -126,7 +126,7 @@ export async function processMessage(encryptedMessage: string) {
   if (!theirPublicKey) {
     verification = 'not_found';
   } else {
-    const theirResolvedPublicKey = await readKey({armoredKey: theirPublicKey.key});
+    const theirResolvedPublicKey = await myReadKey({armoredKey: theirPublicKey.key});
     const readingMessageSecond = await myReadMessage({armoredMessage: encryptedMessage}); // Need to read again due to pgp limitation https://github.com/openpgpjs/openpgpjs/issues/1461
     if (!readingMessageSecond) {
       console.error('Not a valid pgp message', encryptedMessage)
@@ -215,7 +215,7 @@ export async function processMessagesToChats(myPrivateKeyID: string): Promise<vo
     if (!theirPublicKey) {
       verification = 'not_found';
     } else {
-      const theirResolvedPublicKey = await readKey({armoredKey: theirPublicKey.key});
+      const theirResolvedPublicKey = await myReadKey({armoredKey: theirPublicKey.key});
       const readingMessageSecond = await myReadMessage({armoredMessage: message.message}); // Need to read again due to pgp limitation https://github.com/openpgpjs/openpgpjs/issues/1461
       if (!readingMessageSecond) {
         console.error('Not a valid pgp message', message.message)
