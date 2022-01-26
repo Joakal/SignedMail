@@ -32,7 +32,6 @@
         v-bind="chat"
         :name="chat.detail.chatUserID"
         :text="[chat.chat]"
-        :stamp="chat.detail.createdDate?.toLocaleString()"
         :sent="chat.detail.verification === 'self'"
         :text-color="chat.detail.verification === 'self' ? 'white' : 'black'"
         :bg-color="chat.detail.verification === 'self' ? 'primary' : 'grey-4'"
@@ -40,21 +39,23 @@
         @click="chat.detail.verification === 'self' && clickMessage(chat.chat)"
         exact
       >
-        <template v-slot:stamp v-if="chat.detail.verification !== 'self'">
-          {{chat.detail.createdDate?.toLocaleString()}}
-          <q-icon v-if="chat.detail.verification === 'verified'" name="check_circle_outline" color="positive">
-            <q-tooltip>
-              The signature verification succeeded for their public key ({{theirPublicKeyID}})
-            </q-tooltip>
-          </q-icon>
-          <q-icon v-else name="error_outline" color="negative">
-            <q-tooltip v-if="chat.detail.verification === 'not_found'">
-              There was no matching public key found for their public key ({{theirPublicKeyID}})
-            </q-tooltip>
-            <q-tooltip>
-              The signature verification failed for their public key ({{theirPublicKeyID}})
-            </q-tooltip>
-          </q-icon>
+        <template v-slot:stamp>
+          {{timestamp(chat.detail.createdDate)}}
+          <span v-if="chat.detail.verification !== 'self'">
+            <q-icon v-if="chat.detail.verification === 'verified'" name="check_circle_outline" color="positive">
+              <q-tooltip>
+                The signature verification succeeded for their public key ({{theirPublicKeyID}})
+              </q-tooltip>
+            </q-icon>
+            <q-icon v-else name="error_outline" color="negative">
+              <q-tooltip v-if="chat.detail.verification === 'not_found'">
+                There was no matching public key found for their public key ({{theirPublicKeyID}})
+              </q-tooltip>
+              <q-tooltip>
+                The signature verification failed for their public key ({{theirPublicKeyID}})
+              </q-tooltip>
+            </q-icon>
+          </span>
         </template>
       </q-chat-message>
       <q-input bottom-slots v-model="inputChat" type="textarea" hint="Write your message or add their PGP Message here">
@@ -79,6 +80,9 @@ import { myCreateMessage, processMessage, processMessagesToChats } from 'src/uti
 import { addToClipboard } from 'src/util/clipboard'
 import { ChatsModule } from 'src/store/chats';
 import { KeysModule } from 'src/store/keys';
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+dayjs.extend(relativeTime);
 
 const isValidMessage = async (message: string) => {
   try {
@@ -87,6 +91,10 @@ const isValidMessage = async (message: string) => {
   } catch {
     return false;
   }
+}
+
+const timestamp = (dateObj: Date | undefined) => {
+  return dateObj ? dayjs().to(dayjs(dateObj)) : undefined
 }
 
 export default defineComponent({
@@ -162,6 +170,7 @@ export default defineComponent({
       chats,
       theirPublicKeyID,
       publicKey,
+      timestamp,
       rowClick: (id: string) => router.push({ name: 'history' , params: { id } }),
       clickMessage: encryptMessage,
       submitMessage,
