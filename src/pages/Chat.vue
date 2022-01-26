@@ -42,13 +42,17 @@
       >
         <template v-slot:stamp v-if="chat.detail.verification !== 'self'">
           {{chat.detail.createdDate?.toLocaleString()}}
-          <q-icon v-if="chat.detail.verification === 'verified'" name="check_circle_outline" color="positive"></q-icon>
+          <q-icon v-if="chat.detail.verification === 'verified'" name="check_circle_outline" color="positive">
+            <q-tooltip>
+              The signature verification succeeded for their public key ({{theirPublicKeyID}})
+            </q-tooltip>
+          </q-icon>
           <q-icon v-else name="error_outline" color="negative">
             <q-tooltip v-if="chat.detail.verification === 'not_found'">
-              There was no matching public key found for {{theirPublicKeyID}}
+              There was no matching public key found for their public key ({{theirPublicKeyID}})
             </q-tooltip>
             <q-tooltip>
-              The signature verification failed for {{theirPublicKeyID}}
+              The signature verification failed for their public key ({{theirPublicKeyID}})
             </q-tooltip>
           </q-icon>
         </template>
