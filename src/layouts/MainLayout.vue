@@ -27,6 +27,17 @@
     >
       <q-list>
         <NavTitle />
+        <q-expansion-item
+          expand-separator
+          icon="vpn_key"
+          label="Other Features"
+        >
+          <EssentialLink
+            v-for="link in keyFeaturesLinks"
+            :key="link.title"
+            v-bind="link"
+          />
+        </q-expansion-item>
         <EssentialLink
           v-for="link in essentialLinks"
           :key="link.title"
@@ -45,7 +56,7 @@
 
 <script lang="ts">
 
-const linksList = [
+const keyFeaturesList = [
   {
     title: 'Encrypt',
     icon: 'lock',
@@ -76,6 +87,10 @@ const linksList = [
     icon: 'security',
     link: '/private'
   },
+];
+
+
+const linksList = [
   {
     title: 'Add Key',
     icon: 'vpn_key',
@@ -130,9 +145,11 @@ export default defineComponent({
     }
 
     const essentialLinks = linksList.map(item => ({...item, link: `${router.options.history.base}${item.link}`}))
+    const keyFeaturesLinks = keyFeaturesList.map(item => ({...item, link: `${router.options.history.base}${item.link}`}))
     
     return {
       essentialLinks,
+      keyFeaturesLinks,
       leftDrawerOpen,
       toggleLeftDrawer () {
         leftDrawerOpen.value = !leftDrawerOpen.value
