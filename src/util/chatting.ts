@@ -214,7 +214,7 @@ export async function processMessagesToChats(myPrivateKeyID: string): Promise<vo
       verification = 'self';
       const messageObject = JSON.parse(decryptedMessage) as IMyChat;
 
-      if (messageObject.chat) {
+      if (messageObject.chat !== undefined) {
         decryptedMessage = messageObject.chat
       }
 
