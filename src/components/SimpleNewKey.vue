@@ -34,14 +34,6 @@
         @click="hidePassphrase = !hidePassphrase"
       />
     </q-input>
-    <q-expansion-item
-      v-model="expanded"
-      icon="perm_identity"
-      label="Advanced"
-    >
-      <q-select v-model="type" :options="createTypeOptions" label="Standard" />
-      <q-select v-model="curve" :options="createCurveOptions" label="Standard" />
-    </q-expansion-item>
     <div class="row justify-evenly q-pa-xs">
       <q-btn type="submit" color="primary" label="Create keys" />
     </div>
@@ -97,8 +89,6 @@ export default defineComponent({
       passphrase,  
       emailRegex, 
       expanded,
-      type,
-      curve,
       createTypeOptions,
       createCurveOptions,
       handleCreateKeys

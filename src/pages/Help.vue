@@ -23,5 +23,5 @@
     <li>Gain that one step to understanding that security is hard.</li>
   </ol>
   <h3>Need more help, got feedback or questions?</h3>
-  <p>Join the discussions here: <a href="https://github.com/Joakal/SignedMail/discussions">https://github.com/Joakal/SignedMail/discussions</a></p>
+  <p>Join the discussions here: <router-link :to="{name: 'discussions'}" replace>Discussions</router-link></p>
 </template>

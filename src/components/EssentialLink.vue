@@ -1,8 +1,7 @@
 <template>
   <q-item
     clickable
-    tag="a"
-    :href="link"
+    :to="!!named ? named : undefined"
   >
     <q-item-section
       v-if="icon"
@@ -36,9 +35,9 @@ export default defineComponent({
       default: ''
     },
 
-    link: {
+    named: {
       type: String,
-      default: '#'
+      default: undefined
     },
 
     icon: {

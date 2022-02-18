@@ -12,7 +12,7 @@
         />
 
         <q-toolbar-title>
-          SignedMail
+          <q-btn flat :to="{ name: 'home' }">SignedMail</q-btn>
         </q-toolbar-title>
 
         <GlobalPublicKey />
@@ -21,7 +21,6 @@
 
     <q-drawer
       v-model="leftDrawerOpen"
-      show-if-above
       bordered
       class="bg-grey-1"
     >
@@ -33,13 +32,13 @@
           label="Other Features"
         >
           <EssentialLink
-            v-for="link in keyFeaturesLinks"
+            v-for="link in keyFeaturesList"
             :key="link.title"
             v-bind="link"
           />
         </q-expansion-item>
         <EssentialLink
-          v-for="link in essentialLinks"
+          v-for="link in linksList"
           :key="link.title"
           v-bind="link"
         />
@@ -60,32 +59,32 @@ const keyFeaturesList = [
   {
     title: 'Encrypt',
     icon: 'lock',
-    link: '/encrypt'
+    named: 'encrypt'
   },
   {
     title: 'Decrypt',
     icon: 'lock_open',
-    link: '/decrypt'
+    named: 'decrypt'
   },
   {
     title: 'Signing',
     icon: 'create',
-    link: '/signing'
+    named: 'signing'
   },
   {
     title: 'Verifying',
     icon: 'how_to_reg',
-    link: '/verifying'
+    named: 'verifying'
   },
   {
     title: 'Public Keys',
     icon: 'public',
-    link: '/public'
+    named: 'public'
   },
   {
     title: 'Private Keys',
     icon: 'security',
-    link: '/private'
+    named: 'private'
   },
 ];
 
@@ -94,17 +93,17 @@ const linksList = [
   {
     title: 'Add Key',
     icon: 'vpn_key',
-    link: '/add'
+    named: 'add'
   },
   {
     title: 'Help',
     icon: 'rss_feed',
-    link: '/help'
+    named: 'help'
   },
   {
     title: 'About',
     icon: 'record_voice_over',
-    link: '/about'
+    named: 'about'
   },
 ];
 
@@ -144,16 +143,13 @@ export default defineComponent({
       void router.push({ path: JSON.parse(urlRedirect) as string }) // -> /user/123
     }
 
-    const essentialLinks = linksList.map(item => ({...item, link: `${router.options.history.base}${item.link}`}))
-    const keyFeaturesLinks = keyFeaturesList.map(item => ({...item, link: `${router.options.history.base}${item.link}`}))
-    
     return {
-      essentialLinks,
-      keyFeaturesLinks,
+      linksList,
+      keyFeaturesList,
       leftDrawerOpen,
       toggleLeftDrawer () {
         leftDrawerOpen.value = !leftDrawerOpen.value
-      },
+      }
     }
   }
 })
