@@ -86,6 +86,11 @@ const keyFeaturesList = [
     icon: 'security',
     named: 'private'
   },
+  {
+    title: 'Create Keys',
+    icon: 'vpn_key',
+    named: 'create'
+  },
 ];
 
 

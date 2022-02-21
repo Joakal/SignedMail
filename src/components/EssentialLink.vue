@@ -1,7 +1,7 @@
 <template>
   <q-item
     clickable
-    :to="!!named ? named : undefined"
+    :to="{ name: named }"
   >
     <q-item-section
       v-if="icon"
