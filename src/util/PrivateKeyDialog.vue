@@ -37,7 +37,8 @@
 <script lang="ts">
 import { defineComponent, ref, toRef, Ref, onMounted } from 'vue';
 import { useDialogPluginComponent } from 'quasar'
-import { decryptKey, PrivateKey, readPrivateKey } from 'openpgp';
+import { decryptKey, PrivateKey } from 'openpgp';
+import { myReadPrivateKey } from './encryption';
 
 export default defineComponent({
   name: 'PrivateKeyDialog',
@@ -62,21 +63,32 @@ export default defineComponent({
     const title = ref('');
 
     onMounted(async () => {
-      resolvedPrivateKey.value = await readPrivateKey({ armoredKey: privateKeyString.value });
+      resolvedPrivateKey.value = await myReadPrivateKey({ armoredKey: privateKeyString.value });
       const username = resolvedPrivateKey.value.getUserIDs().join(', ');
       title.value = `Passphrase for ${username}`
     })
 
     const onOKClick = async () => {
       if (resolvedPrivateKey.value) {
+          console.log('WeirderrorresolvedPrivateKey.value', resolvedPrivateKey.value)
+
+          console.log('isDecrypted', resolvedPrivateKey.value.isDecrypted());
         try {
-          const decryptedPrivateKey = await decryptKey({
-            privateKey: resolvedPrivateKey.value,
-            passphrase: passphrase.value
-          });
+          let decryptedPrivateKey;
+          if (!resolvedPrivateKey.value.isDecrypted()) {
+            decryptedPrivateKey = await decryptKey({
+              privateKey: resolvedPrivateKey.value,
+              passphrase: passphrase.value
+            });
+          } else {
+            decryptedPrivateKey = resolvedPrivateKey.value
+          }
+          
+          console.log('Weird', decryptedPrivateKey)
           return onDialogOK(decryptedPrivateKey);
         } catch (error: unknown) {
           const {message} = error as Error;
+          console.log('Weirderror', error)
           passphraseError.value = message
         }
       } else {

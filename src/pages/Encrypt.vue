@@ -117,16 +117,16 @@ export default defineComponent({
 
     const publicKeySelected = computed({
       get: () => KeysModule.getPublicKeys.find(key => key.keyID === KeysModule.getDefaults.encrypt.publicKeyID),
-      set: val => KeysModule.changeDefaultEncryptPublicKey(val?.keyID)
+      set: val => KeysModule.changeDefaultEncryptPublicKeyID(val?.keyID)
     })
     const privateKeySelected = computed({
       get: () => KeysModule.getPrivateKeys.find(key => key.keyID === KeysModule.getDefaults.encrypt.privateKeyID),
-      set: val => KeysModule.changeDefaultEncryptPrivateKey(val?.keyID)
+      set: val => KeysModule.changeDefaultEncryptPrivateKeyID(val?.keyID)
     })
 
     const handleEncrypt = async () => {
       if (publicKeySelected.value && privateKeySelected.value) {
-        output.value = await encryptMessage(input.value, publicKeySelected.value.key, privateKeySelected.value.key)
+        output.value = await encryptMessage(input.value, publicKeySelected.value.armor, privateKeySelected.value.armor)
       } else {
         $q.notify({
           type: 'negative',

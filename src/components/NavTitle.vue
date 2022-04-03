@@ -64,7 +64,7 @@ export default defineComponent({
     const currentKeyValue = computed(() => KeysModule.getPrivateKeyByChatDefault())
     
     const selectUser = (myPrivateKeyID: string) => {
-      KeysModule.changeDefaultChatPrivateKey(myPrivateKeyID)
+      KeysModule.changeDefaultChatPrivateKeyID(myPrivateKeyID)
       void router.push({ name: 'chats', params: {myPrivateKeyID} })
     }
     

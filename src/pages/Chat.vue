@@ -145,6 +145,7 @@ export default defineComponent({
     const submitMessage = async () => {
       inputChatError.value = '';
       try {
+        console.log('submitMessage')
         const { chat, message } = await encryptMessage();
         ChatsModule.addChat({chat})
         ChatsModule.addMessage({message})
@@ -156,6 +157,7 @@ export default defineComponent({
     }
 
     const encryptMessage = async (text?: string) => {
+        console.log('encryptMessage')
       const { theirEncryptedMessage, chat, message } = await myCreateMessage(text ? text : inputChat.value, theirPublicKeyID.value, myPrivateKeyID.value)
       await addToClipboard({label: 'Encrypted message', value: theirEncryptedMessage})
       return { chat, message }

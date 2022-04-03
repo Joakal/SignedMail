@@ -8,7 +8,7 @@
           <div class="q-pa-sm q-gutter-sm">
             <q-btn color="secondary" icon="content_copy" label="Public Key" @click="addToClipboard({label: 'Public Key', value: publicKeyValue})" :disable="!publicKeySelected" />
             <q-btn color="secondary" icon="offline_share" label="SignedMail Link" @click="addToClipboard({label: 'Public Key', value: fullUrl})" :disable="!publicKeySelected" />
-            <q-btn color="secondary" icon="download" label="Download" @click="exportFile('PublicKey.crt', publicKeyValue)" :disable="!publicKeySelected" />
+            <q-btn color="secondary" icon="download" label="Download" @click="publicKeyValue && exportFile('PublicKey.crt', publicKeyValue)" :disable="!publicKeySelected" />
             <q-btn color="secondary" icon="qr_code_2" label="QR Code" @click="qrCode" :disable="!publicKeySelected" />
           </div>
           <canvas id="qr-code-public-key"></canvas>
@@ -73,10 +73,10 @@ export default defineComponent({
     }
       
     const publicKeys = computed(() => KeysModule.getPublicKeys);
-    const publicKeyValue = computed(() => publicKeySelected.value ? KeysModule.getPublicKeyByKeyID(publicKeySelected.value.keyID)?.key : undefined)
+    const publicKeyValue = computed(() => publicKeySelected.value ? KeysModule.getPublicKeyByKeyID(publicKeySelected.value.keyID)?.armor : undefined)
     const publicKeySelected = computed({
       get: () => KeysModule.getPublicKeys.find(key => key.keyID === KeysModule.getDefaults.displayKeyID),
-      set: val => KeysModule.changeDefaultDisplay(val?.keyID)
+      set: val => KeysModule.changeDefaultDisplayKeyID(val?.keyID)
     })
     const fullUrl = computed(() => publicKeyValue.value ? `${MOBILE_DOMAIN_URL}add?key=${encodeURIComponent(publicKeyValue.value)}` : '');
 

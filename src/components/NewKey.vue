@@ -35,6 +35,7 @@
       />
     </q-input>
     <q-expansion-item
+      v-if="!simple"
       v-model="expanded"
       icon="perm_identity"
       label="Advanced"
@@ -55,12 +56,19 @@
 import { useQuasar } from 'quasar'
 import { EllipticCurveName, KeyOptions } from 'openpgp';
 import { defineComponent, ref, Ref } from 'vue'
-import { createKeys, CombinedKeyPair, emailRegex, createTypeOptions, createCurveOptions } from 'src/util/encryption';
+import { createKeys, StoredKeyPair, emailRegex, createTypeOptions, createCurveOptions } from 'src/util/encryption';
 import { KeysModule } from 'src/store/keys';
 export default defineComponent({
   name: 'NewKey',
+  props: {
+    simple: {
+      type: Boolean,
+      required: false,
+      default: false
+    },
+  },
   emits: {
-    newKeys: (payload: CombinedKeyPair): boolean => !!payload,
+    newKeys: (payload: StoredKeyPair): boolean => !!payload,
   },
   setup(_props, { emit }) {
     const $q = useQuasar()
@@ -77,9 +85,14 @@ export default defineComponent({
       try {
         const keys = await createKeys(name.value, email.value, passphrase.value, type.value, curve.value)
         if (keys) {
-          await KeysModule.addKeys({keys});
+          const keysArmor = {
+            publicKeyArmor: keys.publicKey.armor(), 
+            privateKeyArmor: keys.publicKey.armor(), 
+            revocationCertificate: keys.revocationCertificate
+          }
+          await KeysModule.addKeys({ keys: keysArmor });
 
-          emit('newKeys', keys);
+          emit('newKeys', keysArmor);
         }
       } catch (error: unknown) {
         const {message} = error as Error;

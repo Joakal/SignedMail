@@ -15,10 +15,10 @@ import { Key, } from 'openpgp';
 import { defineComponent, defineAsyncComponent, ref, Ref, computed, onMounted} from 'vue'
 import { useRoute } from 'vue-router'
 import { KeysModule } from 'src/store/keys';
-import { CombinedKeyPair, myReadKey } from 'src/util/encryption';
+import { StoredKeyPair, myReadKey } from 'src/util/encryption';
 
 export default defineComponent({
-  name: 'AddingKeys',
+  name: 'CreateKeys',
   components: {
     NewKey: defineAsyncComponent(() => import('components/NewKey.vue')),
     ShowKeys: defineAsyncComponent(() => import('components/ShowKeys.vue'))
@@ -26,7 +26,7 @@ export default defineComponent({
   setup() {
     const $q = useQuasar()
     const route = useRoute()
-    const showKeys: Ref<CombinedKeyPair | undefined> = ref(undefined);
+    const showKeys: Ref<StoredKeyPair | undefined> = ref(undefined);
 
 
     const handleAddKey = async (key: string) => {
@@ -46,10 +46,10 @@ export default defineComponent({
           message: 'This key already exists locally',
         });
       } else {
-        await KeysModule.importPublicKey({key: keyValue});
+        await KeysModule.importPublicKey({armoredKey: key});
       }
       
-      showKeys.value = { publicKey: keyValue };
+      showKeys.value = { publicKeyArmor: key };
     };
 
     onMounted(async () => {

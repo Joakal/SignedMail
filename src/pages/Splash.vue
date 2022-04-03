@@ -2,7 +2,7 @@
   <q-page>
     <q-card>
       <q-card-section>
-        <SimpleNewKey />
+        <NewKey :simple="true" />
       </q-card-section>
     </q-card>
     <p>Do you have an existing private key? <router-link :to="{name: 'add'}" replace>Add it here</router-link> instead</p>
@@ -17,7 +17,7 @@ import { KeysModule } from 'src/store/keys';
 export default defineComponent({
   name: 'Splash',
   components: {
-    SimpleNewKey: defineAsyncComponent(() => import('components/SimpleNewKey.vue'))
+    NewKey: defineAsyncComponent(() => import('components/NewKey.vue'))
   },
   setup() {
     const router = useRouter();

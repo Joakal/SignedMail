@@ -1,11 +1,15 @@
+/**
+ * For storing unecrypted (public) keys and details. 
+ * 
+ * Do not modify to store any encrypted values here as the values are stored in unencrypted format.
+ */
 import { Module, VuexModule, Mutation, getModule, Action } from 'vuex-module-decorators'
-import { Key } from 'openpgp'
 import store from 'src/store';
-import { CombinedKeyPair, getUserIDs, getPrivateKeyId, getPublicKeyId } from 'src/util/encryption';
+import { StoredKeyPair, getUserIDs, getKeyId, getPublicKeyIdByPrivateKey } from 'src/util/encryption';
 import { STORAGE_KEY } from 'src/util/constants';
 
 export interface IKeyRecord {
-  key: string;
+  armor: string;
   userID: string;
   keyID: string;
 }
@@ -37,20 +41,14 @@ export const restoreKeysFromLocalStorage = () => {
   return JSON.parse(window.localStorage.getItem(STORAGE_KEY) || 'null') as KeysStateInterface
 }
 
-const formatForTable = async (keyType: string, key: string) => {
+const formatForTable = async (armor: string) => {
 
-  let keyID = '';
-  if (keyType === 'private') {
-    keyID = await getPrivateKeyId(key);
-  } else {
-    keyID = await getPublicKeyId(key);
-  }
-
-  const userIDArray = await getUserIDs(key);
+  const keyID = await getKeyId(armor);
+  const userIDArray = await getUserIDs(armor);
   const userID = userIDArray.join(', ');
   
   return {
-    key,
+    armor,
     userID,
     keyID
   }
@@ -89,8 +87,8 @@ export default class Keys extends VuexModule {
   }
   
   @Mutation
-  removePublicKey(removedKeyID: string) {
-    this.publicKeys = this.publicKeys.filter(keyRecord => keyRecord.keyID !== removedKeyID);
+  removePublicKeyByKeyID(KeyID: string) {
+    this.publicKeys = this.publicKeys.filter(keyRecord => keyRecord.keyID !== KeyID);
   }
   
   @Mutation
@@ -99,47 +97,47 @@ export default class Keys extends VuexModule {
   }
   
   @Mutation
-  removePrivateKey(removedKeyID: string) {
-    this.privateKeys = this.privateKeys.filter(keyRecord => keyRecord.keyID !== removedKeyID);
+  removePrivateKeyByKeyID(KeyID: string) {
+    this.privateKeys = this.privateKeys.filter(keyRecord => keyRecord.keyID !== KeyID);
   }
   
   @Mutation
-  changeDefaultEncryptPrivateKey(keyID?: string) {
+  changeDefaultEncryptPrivateKeyID(keyID?: string) {
     this.defaults.encrypt.privateKeyID = keyID;
   }
   
   @Mutation
-  changeDefaultEncryptPublicKey(keyID?: string) {
+  changeDefaultEncryptPublicKeyID(keyID?: string) {
     this.defaults.encrypt.publicKeyID = keyID;
   }
   
   @Mutation
-  changeDefaultDecryptPrivateKey(keyID?: string) {
+  changeDefaultDecryptPrivateKeyID(keyID?: string) {
     this.defaults.decrypt.privateKeyID = keyID;
   }
   
   @Mutation
-  changeDefaultDecryptPublicKey(keyID?: string) {
+  changeDefaultDecryptPublicKeyID(keyID?: string) {
     this.defaults.decrypt.publicKeyID = keyID;
   }
   
   @Mutation
-  changeDefaultSigning(keyID?: string) {
+  changeDefaultSigningKeyID(keyID?: string) {
     this.defaults.signingKeyID = keyID;
   }
   
   @Mutation
-  changeDefaultVerifying(keyID?: string) {
+  changeDefaultVerifyingKeyID(keyID?: string) {
     this.defaults.verifyingKeyID = keyID;
   }
   
   @Mutation
-  changeDefaultDisplay(keyID?: string) {
+  changeDefaultDisplayKeyID(keyID?: string) {
     this.defaults.displayKeyID = keyID;
   }
 
   @Mutation
-  changeDefaultChatPrivateKey(keyID?: string) {
+  changeDefaultChatPrivateKeyID(keyID?: string) {
     this.defaults.chat.privateKeyID = keyID;
   }
   
@@ -152,51 +150,42 @@ export default class Keys extends VuexModule {
   }
   
   @Action
-  async addKeys (payload: { keys: CombinedKeyPair }) {
+  async addKeys (payload: { keys: StoredKeyPair }) {
     const { keys } = payload
-    const publicRecord = await formatForTable('public', keys.publicKey.armor());
+    const publicRecord = await formatForTable(keys.publicKeyArmor);
     this.addPublicKey(publicRecord);
 
-    if (keys.privateKey) {
-      const privateRecord = await formatForTable('private', keys.privateKey.armor());
+    if (keys.privateKeyArmor) {
+      const privateRecord = await formatForTable(keys.privateKeyArmor);
       this.addPrivateKey(privateRecord);
     }
   }
 
   @Action
-  async importPublicKey (payload: { key: Key }) {
-    const { key } = payload
-    const publicRecord = await formatForTable('public', key.armor());
+  async importPublicKey (payload: { armoredKey: string }) {
+    const { armoredKey } = payload
+    const publicRecord = await formatForTable(armoredKey);
     this.addPublicKey(publicRecord);
   }
 
   @Action
-  async importPrivateKey (payload: { key: Key }) {
-    const { key } = payload
-    const privateRecord = await formatForTable('public', key.armor());
+  async importPrivateKey (payload: { armoredKey: string }) {
+    const { armoredKey } = payload;
+    const privateRecord = await formatForTable(armoredKey);
     this.addPrivateKey(privateRecord);
-  }
-  
-  @Action
-  removeKeys (payload: { keys: CombinedKeyPair }) {
-    const { keys } = payload
-    this.removePublicKey(keys.publicKey.armor());
-    if (keys.privateKey) {
-      this.removePrivateKey(keys.privateKey.armor());
-    }
   }
 
   get getPublicKeys () {
     return this.publicKeys;
   }
 
-  get getPublicKeysWithoutPrivateKey () {
+  get getOtherPublicKeysByPrivateKeyID () {
     return async (privateKeyID: string) => {
       const privateKey = this.getPrivateKeyByKeyID(privateKeyID);
       if (!privateKey) {
         return [];
       }
-      const publicKeyID = await getPublicKeyId(privateKey.key)
+      const publicKeyID = await getPublicKeyIdByPrivateKey(privateKey.armor)
 
       return this.publicKeys.filter(publicKey => {
         return publicKey.keyID !== publicKeyID

@@ -83,13 +83,13 @@ export default defineComponent({
     const publicKeys = computed(() => KeysModule.getPublicKeys);
     const publicKeySelected = computed({
       get: () => KeysModule.getPublicKeys.find(key => key.keyID === KeysModule.getDefaults.verifyingKeyID),
-      set: val => KeysModule.changeDefaultVerifying(val?.keyID)
+      set: val => KeysModule.changeDefaultVerifyingKeyID(val?.keyID)
     })
     
     const handleVerifying = async () => {
       if (publicKeySelected.value) {
         try {
-          await verifyMessage(input.value, publicKeySelected.value.key, detachedSignature.value)
+          await verifyMessage(input.value, publicKeySelected.value.armor, detachedSignature.value)
           $q.notify({
             type: 'positive',
             message: 'This has been signed',

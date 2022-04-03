@@ -86,12 +86,12 @@ export default defineComponent({
 
     const privateKeySelected = computed({
       get: () => KeysModule.getPrivateKeys.find(key => key.keyID === KeysModule.getDefaults.signingKeyID),
-      set: val => KeysModule.changeDefaultSigning(val?.keyID)
+      set: val => KeysModule.changeDefaultSigningKeyID(val?.keyID)
     })
 
     const handleSigning = async () => {
-      if (privateKeySelected.value?.key) {
-        const signature = await signMessage(input.value, privateKeySelected.value.key)
+      if (privateKeySelected.value?.armor) {
+        const signature = await signMessage(input.value, privateKeySelected.value.armor)
         const combined = `${input.value}\n\n${signature}`
 
         output.value = combined;

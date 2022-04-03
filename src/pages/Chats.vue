@@ -68,10 +68,17 @@
       <q-btn color="primary" label="Start chat" @click="startChat" :disable="!publicKeySelected" />
       <q-btn color="secondary" label="New Public Key" @click="addNewKey = true"  />
     </div>
-    <q-dialog v-model="addNewKey">
+    <q-dialog v-model="addNewKey" title="HELO">
       <q-card style="width: 700px; max-width: 80vw;">
         <q-card-section>
-          <q-input v-model="publicKeyValue" filled type="textarea" label="Public or Private Key" :error="!!handleAddKeyError.length" :error-message="handleAddKeyError" />
+          <div class="text-h6">Add a key</div>
+        </q-card-section>
+        <q-card-section>
+          <q-input v-model="keyValueInput" filled type="textarea" label="Public or Private Key" :error="!!handleAddKeyError.length" :error-message="handleAddKeyError" />
+          <q-file
+            label="Import a private key"
+            @update:model-value="handleImport"
+          />
           <q-btn color="primary" label="Add Key" @click="handleAddKey" />
           <div class="q-pa-md row" v-if="showKeys">
             <ShowKeys :keys="showKeys" />
@@ -90,7 +97,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { ChatsModule } from 'src/store/chats';
 import { IKeyRecord, KeysModule } from 'src/store/keys';
 import { processMessagesToChats } from 'src/util/chatting';
-import { CombinedKeyPair, myReadKey } from 'src/util/encryption';
+import { StoredKeyPair, myReadKey } from 'src/util/encryption';
 
 export default defineComponent({
   name: 'Chats',
@@ -102,19 +109,19 @@ export default defineComponent({
     const router = useRouter();
     const route = useRoute();
     const myPrivateKeyID = ref('');
-    const publicKeyValue = ref('');
+    const keyValueInput = ref('');
     const addNewKey = ref(false);
     const handleAddKeyError = ref('')
     const publicKeySelected: Ref<IKeyRecord | undefined> = ref();
     const publicKeyOptions: Ref<IKeyRecord[]> = ref([]);
     const publicKeys: Ref<IKeyRecord[]> = ref([]);
-    const showKeys: Ref<CombinedKeyPair | undefined> = ref(undefined);
+    const showKeys: Ref<StoredKeyPair | undefined> = ref(undefined);
 
     const chats = computed(() => ChatsModule.getChatsByPrivateKeyID(myPrivateKeyID.value));
     const uniqueChats = computed(() => ChatsModule.getUniqueChatsByPrivateKeyID(myPrivateKeyID.value));
     const messages = computed(() => ChatsModule.getMessagesByPrivateKeyID(myPrivateKeyID.value));
     const privateKey = computed(() => KeysModule.getPrivateKeyByKeyID(myPrivateKeyID.value));
-    
+
     const publicKeyFilterFn = (inputValue: string, doneFn: (callBackFn: () => void) => void) => {
       if (inputValue === '') {
         doneFn(() => {
@@ -127,10 +134,10 @@ export default defineComponent({
         publicKeyOptions.value = publicKeys.value.filter(v => v.userID.toLowerCase().indexOf(needle) > -1)
       })
     };
-    
+
     const processInboxChange = async () => {
       myPrivateKeyID.value = route.params.myPrivateKeyID as string
-      publicKeyOptions.value = await KeysModule.getPublicKeysWithoutPrivateKey(myPrivateKeyID.value)
+      publicKeyOptions.value = await KeysModule.getOtherPublicKeysByPrivateKeyID(myPrivateKeyID.value)
       if (messages.value.length > chats.value.length) {
         try {
           await processMessagesToChats(myPrivateKeyID.value);
@@ -153,7 +160,7 @@ export default defineComponent({
       let keyValue;
 
       try {
-        keyValue = await myReadKey({armoredKey: publicKeyValue.value})
+        keyValue = await myReadKey({armoredKey: keyValueInput.value})
       } catch (error: unknown) {
         const {message} = error as Error;
         handleAddKeyError.value = message;
@@ -168,11 +175,19 @@ export default defineComponent({
           message: 'This key already exists locally',
         });
       } else {
-        await KeysModule.importPublicKey({key: keyValue});
+        await KeysModule.importPublicKey({armoredKey: keyValueInput.value});
       }
 
-      showKeys.value = { publicKey: keyValue };
+      showKeys.value = { publicKeyArmor: keyValueInput.value };
     };
+
+    const handleImport = (file: Blob) => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        keyValueInput.value = event.target?.result ? event.target.result as string : ''; 
+      }
+      reader.readAsText(file);
+    }
 
     onMounted(async () => {
       if (route.params.myPrivateKeyID) {
@@ -186,14 +201,15 @@ export default defineComponent({
 
     watch(myPrivateKeyID, async () => {
       if (myPrivateKeyID.value) {
-        publicKeys.value = await KeysModule.getPublicKeysWithoutPrivateKey(myPrivateKeyID.value)
+        publicKeys.value = await KeysModule.getOtherPublicKeysByPrivateKeyID(myPrivateKeyID.value)
       }
     });
 
     return {
       addNewKey,
-      publicKeyValue,
+      keyValueInput,
       showKeys,
+      handleImport,
       handleAddKey,
       handleAddKeyError,
       hasEncryptedMessages: computed(() => ChatsModule.hasEncryptedMessages(myPrivateKeyID.value)),

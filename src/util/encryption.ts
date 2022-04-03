@@ -1,10 +1,16 @@
-import {readKey, encrypt, decrypt, createMessage, readMessage, generateKey, EllipticCurveName, KeyOptions, UserID, EncryptOptions, Message, MaybeStream, Data, DecryptOptions, sign, verify, VerifyOptions, readSignature, PrivateKey, PublicKey, PartialConfig } from 'openpgp';
+import {readKey, encrypt, decrypt, createMessage, readMessage, generateKey, EllipticCurveName, KeyOptions, UserID, EncryptOptions, Message, MaybeStream, Data, DecryptOptions, sign, verify, VerifyOptions, readSignature, PrivateKey, PublicKey, PartialConfig, readPrivateKey } from 'openpgp';
 import { Dialog } from 'quasar'
 import { defineAsyncComponent } from 'vue';
 
+export interface StoredKeyPair {
+  publicKeyArmor: string;
+  privateKeyArmor?: string;
+  revocationCertificate?: string;
+}
+
 export interface CombinedKeyPair {
   publicKey: PublicKey;
-  privateKey?: PrivateKey;
+  privateKey?: PrivateKey; // Gotcha: Do not try to get .armor() of privateKey directly because passphrase will not be in it
   revocationCertificate?: string;
 }
 
@@ -43,13 +49,21 @@ export async function createKeys(name: string, email: string, passphrase: string
 }
 
 export async function resolvePrivateKey(privateKeyString: string) {
-  // Override Quasar's default dialog with our component due to no option for conditional dialog close on clicking OK
-  const decryptedPrivateKey = await new Promise(resolve => Dialog.create({
-    component: defineAsyncComponent(() => import('./PrivateKeyDialog.vue')),
-    componentProps: {
-      privateKeyString
-    }
-  }).onOk((data: string)=> resolve(data)));
+  let decryptedPrivateKey;
+  const resolvedPrivateKey = await myReadPrivateKey({ armoredKey: privateKeyString });
+
+  if (resolvedPrivateKey.isDecrypted()) {
+    console.error('Resolved private key without passphrase, please consider adding a passphrase to the private key');
+    decryptedPrivateKey = resolvedPrivateKey;
+  } else {
+    // Override Quasar's default dialog with our component due to no option for conditional dialog close on clicking OK
+    decryptedPrivateKey = await new Promise(resolve => Dialog.create({
+      component: defineAsyncComponent(() => import('./PrivateKeyDialog.vue')),
+      componentProps: {
+        privateKeyString
+      }
+    }).onOk((data: string)=> resolve(data)));
+  }
 
   return decryptedPrivateKey as PrivateKey
 }
@@ -137,20 +151,19 @@ export async function verifyMessage(body: string, publicKey: string, detachedSig
   return true;
 }
 
-export async function getPrivateKeyId(key: string) {
-  const keys = await myReadKey({ armoredKey: key })
-  const encryptionKey =  await keys.getEncryptionKey();
-  return encryptionKey.getKeyID().toHex();
+export async function getKeyId(armoredKey: string) {
+  const key = await myReadKey({ armoredKey })
+  return key.getKeyID().toHex();
 }
 
-export async function getPublicKeyId(key: string) {
-  const keys = await myReadKey({ armoredKey: key })
+export async function getPublicKeyIdByPrivateKey(privateArmoredKey: string) {
+  const keys = await myReadKey({ armoredKey: privateArmoredKey })
   const signingKey =  await keys.getSigningKey();
   return signingKey.getKeyID().toHex();
 }
 
-export async function getUserIDs(key: string) {
-  const keys = await myReadKey({ armoredKey: key })
+export async function getUserIDs(armoredKey: string) {
+  const keys = await myReadKey({ armoredKey })
   return keys.users.map(user => user.userID?.userID);
 }
 
@@ -162,6 +175,15 @@ type ArmoredOptions = {
 export const myReadKey = async (options: ArmoredOptions) => {
   try { 
     return await readKey(options)
+  } catch (error: unknown) {
+    const {message} = error as Error;
+    throw new Error(friendlyPgpEncryptionWrapper(message))
+  }
+}
+
+export const myReadPrivateKey = async (options: ArmoredOptions) => {
+  try { 
+    return await readPrivateKey(options);
   } catch (error: unknown) {
     const {message} = error as Error;
     throw new Error(friendlyPgpEncryptionWrapper(message))

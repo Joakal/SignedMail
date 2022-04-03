@@ -31,4 +31,6 @@ quasar build
 
 ### Fun headaches
 
-Don't use key as a variable. It's a reserved word.
+Vue: Don't use key as a variable. It's a reserved word.
+
+OpenPGP: Don't decrypt a private key and then use armor() to get the string as it'll return the key without the passphrase.

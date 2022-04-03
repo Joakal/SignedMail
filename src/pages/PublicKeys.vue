@@ -14,7 +14,7 @@ export default defineComponent({
   setup() {
     return {
       rows: computed(() => KeysModule.getPublicKeys),
-      removeKey: (keyID: string) => KeysModule.removePublicKey(keyID)
+      removeKey: (keyID: string) => KeysModule.removePublicKeyByKeyID(keyID)
     };
   }
 });

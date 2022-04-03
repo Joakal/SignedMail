@@ -1,3 +1,8 @@
+/**
+ * For storing encrypted messages and details. 
+ * 
+ * Do not put this store anywhere permanently.
+ */
 import { Module, VuexModule, Mutation, getModule } from 'vuex-module-decorators'
 import store from 'src/store';
 import { MESSAGE_KEY } from 'src/util/constants';
